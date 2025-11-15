@@ -450,8 +450,9 @@ body {
     background-color: #6a0dad;
 }
 
-/* --- Product Detail Modal --- */
-.modal-overlay {
+/* --- Product Detail & Checkout Modals --- */
+/* UPDATED: Added .checkout-modal-overlay */
+.modal-overlay, .checkout-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -468,7 +469,7 @@ body {
     transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
-.modal-overlay.active {
+.modal-overlay.active, .checkout-modal-overlay.active {
     opacity: 1;
     visibility: visible;
 }
@@ -486,7 +487,14 @@ body {
     transition: transform 0.3s ease;
 }
 
-.modal-overlay.active .modal-content {
+/* NEW: Make checkout modal smaller */
+.checkout-modal-overlay .modal-content {
+    max-width: 500px;
+}
+
+
+.modal-overlay.active .modal-content, 
+.checkout-modal-overlay.active .modal-content {
     transform: scale(1);
 }
 
@@ -734,6 +742,101 @@ body {
     padding: 15px;
 }
 
+/* --- NEW: Checkout Form Styles --- */
+.checkout-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-family: var(--font-headings);
+    font-size: 1rem;
+    color: var(--primary-purple);
+}
+
+.form-group input {
+    background-color: var(--bg-dark-purple);
+    border: 1px solid var(--primary-purple);
+    border-radius: 5px;
+    padding: 12px;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--text-light);
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-group input:focus {
+    border-color: var(--secondary-green);
+    box-shadow: 0 0 10px rgba(57, 255, 20, 0.3);
+}
+
+.checkout-summary {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-headings);
+    font-size: 1.5rem;
+    padding: 1rem 0;
+    border-top: 1px solid var(--primary-purple);
+    border-bottom: 1px solid var(--primary-purple);
+    margin-top: 1rem;
+}
+
+.checkout-summary span:last-child {
+    color: var(--secondary-green);
+    font-weight: 700;
+}
+
+.payment-note {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #888;
+}
+
+.confirm-purchase-btn {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.2rem;
+}
+
+/* --- NEW: Success Popup --- */
+.success-popup {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translate(-50%, 200%); /* Start hidden below screen */
+    
+    background-color: var(--secondary-green);
+    color: var(--text-dark);
+    font-family: var(--font-headings);
+    font-weight: 700;
+    padding: 1rem 2rem;
+    border-radius: 5px;
+    box-shadow: 0 0 20px rgba(57, 255, 20, 0.6);
+    
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    z-index: 6000; /* Above all */
+    
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.success-popup.active {
+    transform: translate(-50%, 0); /* Slide into view */
+}
+
+.success-popup .fa-check-circle {
+    font-size: 1.5rem;
+}
+
 
 /* --- Responsive Media Queries --- */
 @media (max-width: 768px) { /* This is the tablet breakpoint */
@@ -762,16 +865,14 @@ body {
         font-size: 2.5rem;
     }
 
-    /* --- ALL ITEMS 2x2 GRID (NEW) --- */
+    /* --- ALL ITEMS 2x2 GRID --- */
     
-    /* This targets the .grid-container INSIDE #all-items */
     #all-items .grid-container {
         grid-template-columns: repeat(2, 1fr); /* Force 2 columns */
         gap: 1rem; /* Smaller gap */
         padding: 0 3%; /* Tighter padding */
     }
 
-    /* This makes the cards' content smaller */
     #all-items .product-card .product-image {
         height: 160px; /* Shorter image */
     }
@@ -814,5 +915,11 @@ body {
     /* Make 2x2 grid images even smaller on phones */
     #all-items .product-card .product-image {
         height: 130px; 
+    }
+
+    /* Make checkout modal full width on small screens */
+    .checkout-modal-overlay .modal-content {
+        width: 95%;
+        padding: 1.5rem;
     }
 }

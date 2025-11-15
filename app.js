@@ -4,12 +4,12 @@
     2. Slide-Down Search
     2.5. Mobile Hamburger Menu
     3. Shopping Cart Sidebar
-    4. Global Listeners
+    4. Checkout Modal (NEW)
+    5. Global Listeners
 */
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // UPDATED: Name
     console.log("Mizumo App Initialized");
 
     // ==========================================
@@ -24,7 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const modalOverlay = document.getElementById('product-modal-overlay');
     const modalCloseBtn = document.getElementById('modal-close-btn');
-    // This query will now find ALL product cards (featured and all-items)
     const productCards = document.querySelectorAll('.product-card'); 
 
     const modalImage = document.getElementById('modal-image');
@@ -36,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalAddToCartBtn = document.querySelector('.modal-add-to-cart');
 
     function openModal() {
+        closeAllOverlays(); // Close everything else
         try {
             const card = this;
             // Populate modal
@@ -113,9 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
             searchPanel.classList.remove('active');
             if(pageContent) pageContent.classList.remove('blur-active');
         } else {
-            closeModal();
-            closeCart();
-            closeMobileMenu(); 
+            closeAllOverlays(); // Close everything else
             searchPanel.classList.add('active');
             if(pageContent) pageContent.classList.add('blur-active');
             setTimeout(() => { if(searchInput) searchInput.focus(); }, 100);
@@ -138,11 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileMenuLinks = document.querySelectorAll('.mobile-links a');
 
     function openMobileMenu() {
-        closeModal();
-        closeCart();
-        if (searchPanel && searchPanel.classList.contains('active')) {
-            toggleSearch(); // Close search if open
-        }
+        closeAllOverlays(); // Close everything else
         if (mobileMenu) mobileMenu.classList.add('active');
     }
 
@@ -153,7 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (hamburgerIcon) hamburgerIcon.addEventListener('click', openMobileMenu);
     if (mobileMenuClose) mobileMenuClose.addEventListener('click', closeMobileMenu);
     
-    // Close menu when a link is clicked
     mobileMenuLinks.forEach(link => {
         link.addEventListener('click', closeMobileMenu);
     });
@@ -169,7 +162,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const cartBody = document.getElementById('cart-body');
     const cartEmpty = document.getElementById('cart-empty');
     const cartSubtotalEl = document.getElementById('cart-subtotal-price');
-    // This query will now find ALL buttons (featured and all-items)
     const addToCartButtons = document.querySelectorAll('.add-to-cart-btn'); 
     const cartNotificationBadge = document.getElementById('cart-notification-badge');
 
@@ -197,11 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Core Cart Functions ---
     function openCart() {
-        closeModal();
-        closeMobileMenu(); 
-        if (searchPanel && searchPanel.classList.contains('active')) {
-            toggleSearch();
-        }
+        closeAllOverlays(); // Close everything else
         if(cartOverlay) cartOverlay.classList.add('active');
     }
 
@@ -269,8 +257,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target === cartOverlay) closeCart();
     });
 
-    // This loop finds ALL .add-to-cart-btn elements on the page
-    // and adds the click listener.
     addToCartButtons.forEach(button => {
         button.addEventListener('click', (e) => {
             e.stopPropagation(); 
@@ -294,30 +280,95 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    
-    // Initial render
-    renderCart();
-    updateCartNotification();
-
 
     // ==========================================
-    // 4. GLOBAL "CLICKAWAY" & "ESCAPE" LISTENERS
+    // 4. CHECKOUT LOGIC (NEW)
+    // ==========================================
+    const checkoutBtn = document.getElementById('cart-checkout-btn');
+    const checkoutOverlay = document.getElementById('checkout-modal-overlay');
+    const checkoutCloseBtn = document.getElementById('checkout-close-btn');
+    const checkoutTotalEl = document.getElementById('checkout-total-price');
+    const checkoutForm = document.getElementById('checkout-form');
+    const confirmPurchaseBtn = document.getElementById('confirm-purchase-btn');
+    const successPopup = document.getElementById('success-popup');
+
+    function openCheckout() {
+        closeAllOverlays(); // Close everything else
+        
+        // Get subtotal from cart and put it in the checkout modal
+        if (cartSubtotalEl && checkoutTotalEl) {
+            checkoutTotalEl.textContent = cartSubtotalEl.textContent;
+        }
+        
+        if (checkoutOverlay) checkoutOverlay.classList.add('active');
+    }
+
+    function closeCheckout() {
+        if (checkoutOverlay) checkoutOverlay.classList.remove('active');
+    }
+
+    function showSuccessMessage() {
+        if (successPopup) {
+            successPopup.classList.add('active');
+            // Hide popup after 3 seconds
+            setTimeout(() => {
+                successPopup.classList.remove('active');
+            }, 3000);
+        }
+    }
+
+    if (checkoutBtn) checkoutBtn.addEventListener('click', openCheckout);
+    if (checkoutCloseBtn) checkoutCloseBtn.addEventListener('click', closeCheckout);
+    if (checkoutOverlay) checkoutOverlay.addEventListener('click', (e) => {
+        if (e.target === checkoutOverlay) closeCheckout();
+    });
+
+    if (checkoutForm) {
+        checkoutForm.addEventListener('submit', (e) => {
+            e.preventDefault(); // Stop the form from actually submitting
+            
+            // 1. Show success message
+            showSuccessMessage();
+            
+            // 2. Close checkout
+            closeCheckout();
+            
+            // 3. Clear cart
+            cart = [];
+            
+            // 4. Re-render cart (to show it's empty)
+            renderCart();
+            
+            // 5. Update notification badge (to 0)
+            updateCartNotification();
+
+            // 6. Reset the form fields
+            checkoutForm.reset();
+        });
+    }
+
+    
+    // ==========================================
+    // 5. GLOBAL "CLICKAWAY" & "ESCAPE" LISTENERS
     // ==========================================
     
+    /**
+     * Helper function to close all open overlays.
+     */
+    function closeAllOverlays() {
+        closeModal();
+        closeCart();
+        closeMobileMenu();
+        closeCheckout(); // NEW
+        if (searchPanel && searchPanel.classList.contains('active')) {
+            toggleSearch(); // This will close it
+        }
+    }
+
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
-            if (mobileMenu && mobileMenu.classList.contains('active')) {
-                closeMobileMenu();
-            }
-            else if (cartOverlay && cartOverlay.classList.contains('active')) {
-                closeCart();
-            }
-            else if (modalOverlay && modalOverlay.classList.contains('active')) {
-                closeModal();
-            }
-            else if (searchPanel && searchPanel.classList.contains('active')) {
-                toggleSearch();
-            }
+            // This function now handles all overlays
+            closeAllOverlays();
         }
     });
 
@@ -332,5 +383,9 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleSearch();
         }
     });
+    
+    // Initial render on page load
+    renderCart();
+    updateCartNotification();
 
 });

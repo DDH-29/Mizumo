@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- UPDATED: Title -->
     <title>Mizumo Marketplace</title>
     
     <!-- Link to your stylesheet -->
@@ -21,7 +20,6 @@
 
     <!-- Header -->
     <nav class="navbar">
-        <!-- UPDATED: Logo -->
         <a href="#" class="nav-logo">Mizumo</a>
 
         <!-- Hamburger Icon (Mobile Only) -->
@@ -72,7 +70,6 @@
 
         <!-- Hero Section -->
         <header class="hero">
-            <!-- UPDATED: Title -->
             <h1>Welcome to Mizumo</h1>
             <p>The #1 marketplace for exclusive Roblox assets. Instantly level up your game with our futuristic items, delivered instantly.</p>
             <a href="#featured" class="cta-button">Shop Featured Items</a>
@@ -82,7 +79,6 @@
         <main class="product-grid" id="featured">
             <h2 class="grid-title">Featured Items</h2>
 
-            <!-- UPDATED: This container is now the horizontal scroller -->
             <div class="scroll-container">
                 
                 <!-- Product Card 1 -->
@@ -189,7 +185,7 @@
         </main> <!-- .product-grid -->
 
 
-        <!-- NEW: "All Items" Section -->
+        <!-- "All Items" Section -->
         <main class="product-grid" id="all-items">
             <h2 class="grid-title">All Items</h2>
 
@@ -256,8 +252,7 @@
                     </div>
                 </div>
 
-                <!-- We can re-use items from the carousel, which is common -->
-                <!-- All Items Card 4 (Re-used from featured) -->
+                <!-- All Items Card 4 -->
                 <div class="product-card" 
                      data-id="katana-001"
                      data-title="Neon Katana"
@@ -277,7 +272,7 @@
                     </div>
                 </div>
 
-                <!-- All Items Card 5 (Re-used from featured) -->
+                <!-- All Items Card 5 -->
                 <div class="product-card"
                      data-id="pet-002"
                      data-title="Cyber Pet"
@@ -296,8 +291,8 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- All Items Card 6 (Re-used from featured) -->
+                
+                <!-- All Items Card 6 -->
                 <div class="product-card"
                      data-id="pass-003"
                      data-title="VIP Gamepass"
@@ -329,24 +324,16 @@
             <button class="modal-close" id="modal-close-btn">&times;</button>
             <div class="modal-layout">
                 <div class="modal-image">
-                    <!-- Image source will be set by JavaScript -->
                     <img src="" alt="Product Image" id="modal-image">
                 </div>
                 <div class="modal-details">
-                    <!-- Title will be set by JavaScript -->
                     <h2 class="modal-title" id="modal-title"></h2>
-                    <!-- Category will be set by JavaScript -->
                     <p class="modal-category" id="modal-category"></p>
-                    <!-- Price will be set by JavaScript -->
                     <span class="modal-price" id="modal-price"></span>
-                    
                     <h3 class="details-heading">Description</h3>
-                    <!-- Description will be set by JavaScript -->
                     <p class="modal-description" id="modal-description"></p>
-                    
                     <h3 class="details-heading">Quantity</h3>
                     <input type="number" class="modal-quantity" id="modal-quantity" value="1" min="1" max="10">
-                    
                     <button class="cta-button modal-add-to-cart">
                         Add to Cart
                     </button>
@@ -358,33 +345,61 @@
     <!-- Shopping Cart Overlay & Sidebar -->
     <div class="cart-overlay-container" id="cart-overlay-container">
         <div class="cart-sidebar" id="cart-sidebar">
-            
-            <!-- Cart Header -->
             <div class="cart-header">
                 <h2 class="cart-title">Your Cart</h2>
                 <button class="modal-close" id="cart-close-btn">&times;</button>
             </div>
-            
-            <!-- Cart Body (where items go) -->
             <div class="cart-body" id="cart-body">
-                <!-- Empty state -->
                 <div class="cart-empty active" id="cart-empty">
                     <i class="fas fa-shopping-bag"></i>
                     <p>Your cart is empty.</p>
                 </div>
-                <!-- Cart items will be injected here by app.js -->
             </div>
-            
-            <!-- Cart Footer -->
             <div class="cart-footer">
                 <div class="cart-subtotal">
                     <span>Subtotal:</span>
                     <span id="cart-subtotal-price">R$ 0</span>
                 </div>
-                <button class="cta-button cart-checkout">Go to Checkout</button>
+                <!-- UPDATED: This button now has an ID -->
+                <button class="cta-button cart-checkout" id="cart-checkout-btn">Go to Checkout</button>
             </div>
-
         </div>
+    </div>
+
+    <!-- NEW: Checkout Modal -->
+    <div class="modal-overlay checkout-modal-overlay" id="checkout-modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" id="checkout-close-btn">&times;</button>
+            <h2 class="modal-title" style="text-align: center; margin-bottom: 2rem;">Checkout</h2>
+            
+            <form class="checkout-form" id="checkout-form">
+                <div class="form-group">
+                    <label for="roblox-username">Roblox Username</label>
+                    <input type="text" id="roblox-username" placeholder="Your Roblox username" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email (for receipt)</label>
+                    <input type="email" id="email" placeholder="your.email@example.com" required>
+                </div>
+
+                <div class="checkout-summary">
+                    <span>Total:</span>
+                    <span id="checkout-total-price">R$ 0</span>
+                </div>
+
+                <p class="payment-note">This is a demo. No payment will be processed.</p>
+                
+                <button type="submit" class="cta-button confirm-purchase-btn" id="confirm-purchase-btn">
+                    Confirm Purchase
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- NEW: Success Popup -->
+    <div class="success-popup" id="success-popup">
+        <i class="fas fa-check-circle"></i>
+        <span>Purchase Successful!</span>
     </div>
 
 
