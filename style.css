@@ -11,6 +11,11 @@
 }
 
 /* --- Global Styles --- */
+/* NEW: Add smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -364,8 +369,8 @@ body {
     justify-content: center;
     text-align: center;
     
-    /* UPDATED: Height changed from 60vh to 80vh */
-    height: 80vh; 
+    /* UPDATED: Height changed from 80vh to 100vh */
+    height: 100vh; 
     
     padding: 0 5%;
 }
