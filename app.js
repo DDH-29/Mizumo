@@ -52,7 +52,7 @@ const allProductsContainer = document.getElementById('all-products-container');
  */
 function createProductCardHTML(product) {
     // Set default values in case data is missing
-    const price = product.price ? `R$ ${product.price.toLocaleString()}` : 'Free';
+    const price = product.price ? `Rp. ${product.price.toLocaleString()}` : 'Free';
     const imageUrl = product.image_url || `https://via.placeholder.com/300x250/8A2BE2/FFFFFF?text=${product.title.replace(' ', '+')}`;
     
     // We use data- attributes to store all product info on the card itself
@@ -185,11 +185,11 @@ const successPopup = document.getElementById('success-popup');
 // ==========================================
 function parsePrice(priceStr) {
     if (!priceStr) return 0;
-    return parseInt(String(priceStr).replace('R$', '').replace(',', '').trim());
+    return parseInt(String(priceStr).replace('Rp.', '').replace(',', '').trim());
 }
 
 function formatPrice(priceNum) {
-    return `R$ ${priceNum.toLocaleString()}`;
+    return `Rp. ${priceNum.toLocaleString()}`;
 }
 
 function closeAllOverlays() {
