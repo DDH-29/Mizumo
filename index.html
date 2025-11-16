@@ -15,30 +15,26 @@
     
     <!-- Font Awesome Public CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+    <!-- NEW: Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
     <!-- Header -->
     <nav class="navbar">
         <a href="#" class="nav-logo">Mizumo</a>
-
-        <!-- Hamburger Icon (Mobile Only) -->
         <div class="hamburger-icon" id="hamburger-icon">
             <i class="fas fa-bars"></i>
         </div>
-
-        <!-- Desktop Links -->
         <div class="nav-links">
             <a href="#">Home</a>
             <a href="#">Skins</a>
             <a href="#">Gamepasses</a>
             <a href="#">Pets</a>
         </div>
-
         <div class="nav-icons">
-            <!-- Search Icon -->
             <i class="fas fa-search" id="nav-search-icon"></i> 
-            
             <div class="nav-icon-wrapper" id="cart-icon-wrapper">
                 <i class="fas fa-shopping-cart"></i>
                 <span class="cart-notification-badge" id="cart-notification-badge"></span>
@@ -79,241 +75,23 @@
         <main class="product-grid" id="featured">
             <h2 class="grid-title">Featured Items</h2>
 
-            <div class="scroll-container">
-                
-                <!-- Product Card 1 -->
-                <div class="product-card" 
-                     data-id="katana-001"
-                     data-title="Neon Katana"
-                     data-category="Weapon Skin"
-                     data-price="R$ 800"
-                     data-image-url="https://via.placeholder.com/100x100/8A2BE2/FFFFFF?text=Katana"
-                     data-description="A limited edition katana forged from pure cyber-energy. This item grants a unique glow effect and a custom swing animation.">
-                    
-                    <div class="product-image" style="background-image: url('https://via.placeholder.com/300x250/8A2BE2/FFFFFF?text=Product+Image'); background-size: cover;"></div>
-                    <div class="product-info">
-                        <h3 class="product-title">Neon Katana</h3>
-                        <p class="product-category">Weapon Skin</p>
-                        <div class="product-footer">
-                            <span class="product-price">R$ 800</span>
-                            <button class="add-to-cart-btn">Add <i class="fas fa-shopping-cart"></i></button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Product Card 2 -->
-                <div class="product-card"
-                     data-id="pet-002"
-                     data-title="Cyber Pet"
-                     data-category="Pet"
-                     data-price="R$ 1,200"
-                     data-image-url="https://via.placeholder.com/100x100/39FF14/1A1A1A?text=Pet"
-                     data-description="A loyal companion from the digital frontier. Provides a speed boost and auto-collects loot for you.">
-                    
-                    <div class="product-image" style="background-image: url('https://via.placeholder.com/300x250/39FF14/1A1A1A?text=Product+Image'); background-size: cover;"></div>
-                    <div class="product-info">
-                        <h3 class="product-title">Cyber Pet</h3>
-                        <p class="product-category">Pet</p>
-                        <div class="product-footer">
-                            <span class="product-price">R$ 1,200</span>
-                            <button class="add-to-cart-btn">Add <i class="fas fa-shopping-cart"></i></button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Product Card 3 -->
-                <div class="product-card"
-                     data-id="pass-003"
-                     data-title="VIP Gamepass"
-                     data-category="Gamepass"
-                     data-price="R$ 1,500"
-                     data-image-url="https://via.placeholder.com/100x100/8A2BE2/FFFFFF?text=VIP"
-                     data-description="Unlock exclusive access to the VIP lounge, a unique chat tag, a daily R$ bonus, and a 2x R$ multiplier.">
-                    
-                    <div class="product-image" style="background-image: url('https://via.placeholder.com/300x250/8A2BE2/FFFFFF?text=Product+Image'); background-size: cover;"></div>
-                    <div class="product-info">
-                        <h3 class="product-title">VIP Gamepass</h3>
-                        <p class="product-category">Gamepass</p>
-                        <div class="product-footer">
-                            <span class="product-price">R$ 1,500</span>
-                            <button class="add-to-cart-btn">Add <i class="fas fa-shopping-cart"></i></button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Product Card 4 -->
-                <div class="product-card"
-                     data-id="goggles-004"
-                     data-title="Cyber Goggles"
-                     data-category="Accessory"
-                     data-price="R$ 650"
-                     data-image-url="https://via.placeholder.com/100x100/39FF14/1A1A1A?text=Goggles"
-                     data-description="See the world in code. These animated goggles give your avatar a high-tech scanning effect.">
-                    
-                    <div class="product-image" style="background-image: url('https://via.placeholder.com/300x250/39FF14/1A1A1A?text=Product+Image'); background-size: cover;"></div>
-                    <div class="product-info">
-                        <h3 class="product-title">Cyber Goggles</h3>
-                        <p class="product-category">Accessory</p>
-                        <div class="product-footer">
-                            <span class="product-price">R$ 650</span>
-                            <button class="add-to-cart-btn">Add <i class="fas fa-shopping-cart"></i></button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Product Card 5 -->
-                <div class="product-card"
-                     data-id="blade-005"
-                     data-title="Glitch Blade"
-                     data-category="Weapon Skin"
-                     data-price="R$ 950"
-                     data-image-url="https://via.placeholder.com/100x100/8A2BE2/FFFFFF?text=Blade"
-                     data-description="This unstable blade phases in and out of reality. Features a custom particle trail and sound effect.">
-                    
-                    <div class="product-image" style="background-image: url('https://via.placeholder.com/300x250/8A2BE2/FFFFFF?text=Product+Image'); background-size: cover;"></div>
-                    <div class="product-info">
-                        <h3 class="product-title">Glitch Blade</h3>
-                        <p class="product-category">Weapon Skin</p>
-                        <div class="product-footer">
-                            <span class="product-price">R$ 950</span>
-                            <button class="add-to-cart-btn">Add <i class="fas fa-shopping-cart"></i></button>
-                        </div>
-                    </div>
-                </div>
-
-            </div> <!-- .scroll-container -->
-        </main> <!-- .product-grid -->
-
+            <!-- UPDATED: This container will be filled by app.js -->
+            <div class="scroll-container" id="featured-products-container">
+                <!-- NEW: Loading Spinner -->
+                <div class="loader"></div>
+            </div>
+        </main> 
 
         <!-- "All Items" Section -->
         <main class="product-grid" id="all-items">
             <h2 class="grid-title">All Items</h2>
 
-            <!-- This is the standard wrapping grid -->
-            <div class="grid-container">
-
-                <!-- All Items Card 1 -->
-                <div class="product-card"
-                     data-id="aura-006"
-                     data-title="Energy Aura"
-                     data-category="Effect"
-                     data-price="R$ 500"
-                     data-image-url="https://via.placeholder.com/100x100/8A2BE2/FFFFFF?text=Aura"
-                     data-description="Surround yourself with a crackling purple energy field. A constant, stylish effect.">
-                    
-                    <div class="product-image" style="background-image: url('https://via.placeholder.com/300x250/8A2BE2/FFFFFF?text=Product+Image'); background-size: cover;"></div>
-                    <div class="product-info">
-                        <h3 class="product-title">Energy Aura</h3>
-                        <p class="product-category">Effect</p>
-                        <div class="product-footer">
-                            <span class="product-price">R$ 500</span>
-                            <button class="add-to-cart-btn">Add <i class="fas fa-shopping-cart"></i></button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- All Items Card 2 -->
-                <div class="product-card"
-                     data-id="jetpack-007"
-                     data-title="Cyber Jetpack"
-                     data-category="Accessory"
-                     data-price="R$ 2,500"
-                     data-image-url="https://via.placeholder.com/100x100/39FF14/1A1A1A?text=Jetpack"
-                     data-description="A sleek, neon-green jetpack with custom flight particles. Also provides a double-jump ability in supported games.">
-                    
-                    <div class="product-image" style="background-image: url('https://via.placeholder.com/300x250/39FF14/1A1A1A?text=Product+Image'); background-size: cover;"></div>
-                    <div class="product-info">
-                        <h3 class="product-title">Cyber Jetpack</h3>
-                        <p class="product-category">Accessory</p>
-                        <div class="product-footer">
-                            <span class="product-price">R$ 2,500</span>
-                            <button class="add-to-cart-btn">Add <i class="fas fa-shopping-cart"></i></button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- All Items Card 3 -->
-                <div class="product-card"
-                     data-id="boombox-008"
-                     data-title="Holo-Boombox"
-                     data-category="Gear"
-                     data-price="R$ 750"
-                     data-image-url="https://via.placeholder.com/100x100/8A2BE2/FFFFFF?text=Boombox"
-                     data-description="A portable boombox that plays your favorite Roblox audio. This skin features a holographic visualizer.">
-                    
-                    <div class="product-image" style="background-image: url('https://via.placeholder.com/300x250/8A2BE2/FFFFFF?text=Product+Image'); background-size: cover;"></div>
-                    <div class="product-info">
-                        <h3 class="product-title">Holo-Boombox</h3>
-                        <p class="product-category">Gear</p>
-                        <div class="product-footer">
-                            <span class="product-price">R$ 750</span>
-                            <button class="add-to-cart-btn">Add <i class="fas fa-shopping-cart"></i></button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- All Items Card 4 -->
-                <div class="product-card" 
-                     data-id="katana-001"
-                     data-title="Neon Katana"
-                     data-category="Weapon Skin"
-                     data-price="R$ 800"
-                     data-image-url="https://via.placeholder.com/100x100/8A2BE2/FFFFFF?text=Katana"
-                     data-description="A limited edition katana forged from pure cyber-energy. This item grants a unique glow effect and a custom swing animation.">
-                    
-                    <div class="product-image" style="background-image: url('https://via.placeholder.com/300x250/8A2BE2/FFFFFF?text=Product+Image'); background-size: cover;"></div>
-                    <div class="product-info">
-                        <h3 class="product-title">Neon Katana</h3>
-                        <p class="product-category">Weapon Skin</p>
-                        <div class="product-footer">
-                            <span class="product-price">R$ 800</span>
-                            <button class="add-to-cart-btn">Add <i class="fas fa-shopping-cart"></i></button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- All Items Card 5 -->
-                <div class="product-card"
-                     data-id="pet-002"
-                     data-title="Cyber Pet"
-                     data-category="Pet"
-                     data-price="R$ 1,200"
-                     data-image-url="https://via.placeholder.com/100x100/39FF14/1A1A1A?text=Pet"
-                     data-description="A loyal companion from the digital frontier. Provides a speed boost and auto-collects loot for you.">
-                    
-                    <div class="product-image" style="background-image: url('https://via.placeholder.com/300x250/39FF14/1A1A1A?text=Product+Image'); background-size: cover;"></div>
-                    <div class="product-info">
-                        <h3 class="product-title">Cyber Pet</h3>
-                        <p class="product-category">Pet</p>
-                        <div class="product-footer">
-                            <span class="product-price">R$ 1,200</span>
-                            <button class="add-to-cart-btn">Add <i class="fas fa-shopping-cart"></i></button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- All Items Card 6 -->
-                <div class="product-card"
-                     data-id="pass-003"
-                     data-title="VIP Gamepass"
-                     data-category="Gamepass"
-                     data-price="R$ 1,500"
-                     data-image-url="https://via.placeholder.com/100x100/8A2BE2/FFFFFF?text=VIP"
-                     data-description="Unlock exclusive access to the VIP lounge, a unique chat tag, a daily R$ bonus, and a 2x R$ multiplier.">
-                    
-                    <div class="product-image" style="background-image: url('https://via.placeholder.com/300x250/8A2BE2/FFFFFF?text=Product+Image'); background-size: cover;"></div>
-                    <div class="product-info">
-                        <h3 class="product-title">VIP Gamepass</h3>
-                        <p class="product-category">Gamepass</p>
-                        <div class="product-footer">
-                            <span class="product-price">R$ 1,500</span>
-                            <button class="add-to-cart-btn">Add <i class="fas fa-shopping-cart"></i></button>
-                        </div>
-                    </div>
-                </div>
-
-            </div> <!-- .grid-container -->
-        </main> <!-- .product-grid -->
+            <!-- UPDATED: This container will be filled by app.js -->
+            <div class="grid-container" id="all-products-container">
+                <!-- NEW: Loading Spinner -->
+                <div class="loader"></div>
+            </div>
+        </main> 
 
     </div> <!-- #page-content -->
 
@@ -360,13 +138,12 @@
                     <span>Subtotal:</span>
                     <span id="cart-subtotal-price">R$ 0</span>
                 </div>
-                <!-- UPDATED: This button now has an ID -->
                 <button class="cta-button cart-checkout" id="cart-checkout-btn">Go to Checkout</button>
             </div>
         </div>
     </div>
 
-    <!-- NEW: Checkout Modal -->
+    <!-- Checkout Modal -->
     <div class="modal-overlay checkout-modal-overlay" id="checkout-modal-overlay">
         <div class="modal-content">
             <button class="modal-close" id="checkout-close-btn">&times;</button>
@@ -396,7 +173,7 @@
         </div>
     </div>
 
-    <!-- NEW: Success Popup -->
+    <!-- Success Popup -->
     <div class="success-popup" id="success-popup">
         <i class="fas fa-check-circle"></i>
         <span>Purchase Successful!</span>

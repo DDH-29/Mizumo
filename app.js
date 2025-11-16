@@ -1,30 +1,145 @@
 /* Mizumo Marketplace App
     Contains logic for:
-    1. Product Detail Modal
-    2. Slide-Down Search
-    2.5. Mobile Hamburger Menu
-    3. Shopping Cart Sidebar
-    4. Checkout Modal (NEW)
-    5. Global Listeners
+    1. Supabase Integration (NEW)
+    2. Product Detail Modal
+    3. Slide-Down Search
+    4. Mobile Hamburger Menu
+    5. Shopping Cart Sidebar
+    6. Checkout Modal
+    7. Global Listeners
 */
 
-document.addEventListener('DOMContentLoaded', () => {
+// ==========================================
+// 1. SUPABASE INTEGRATION (NEW)
+// ==========================================
 
-    console.log("Mizumo App Initialized");
+// --- PASTE YOUR KEYS HERE ---
+const SUPABASE_URL = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6anhvYW5keGZjbGN2cGZtdXVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMjI4MzgsImV4cCI6MjA3ODc5ODgzOH0.bm-e14AYu3mBj_knLeigA4PIV5QJNLe68SDyuqwhNxs'; // Get this from Supabase > Project Settings > API > Project URL
+const SUPABASE_ANON_KEY = 'sb_publishable_FgLUWwf9LUxgvJtsI6vP4g_qIY5aqWz'; // Get this from Supabase > Project Settings > API > Project API Keys
+
+// --- Initialize Supabase Client ---
+let supabase = null;
+try {
+    // Check if the variables exist and are not the placeholders
+    if (!SUPABASE_URL || SUPABASE_URL === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6anhvYW5keGZjbGN2cGZtdXVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMjI4MzgsImV4cCI6MjA3ODc5ODgzOH0.bm-e14AYu3mBj_knLeigA4PIV5QJNLe68SDyuqwhNxs') {
+        throw new Error('Supabase URL is not set. Please update app.js.');
+    }
+    if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY === 'sb_publishable_FgLUWwf9LUxgvJtsI6vP4g_qIY5aqWz') {
+        throw new Error('Supabase Anon Key is not set. Please update app.js.');
+    }
+    // Note: The global 'supabase' object comes from the script tag in index.html
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('Mizumo App Initialized with Supabase');
+} catch (error) {
+    console.error(error.message);
+    // Alert the user if the keys are not set
+    const featuredContainer = document.getElementById('featured-products-container');
+    if(featuredContainer) featuredContainer.innerHTML = `<p style="color:red; text-align:center;">Error: Database not connected. Please check Supabase keys in app.js.</p>`;
+    const allProductsContainer = document.getElementById('all-products-container');
+    if(allProductsContainer) allProductsContainer.innerHTML = '';
+}
+
+
+document.addEventListener('DOMContentLoaded', () => {
 
     // ==========================================
     // 0. GLOBAL CART STATE
     // ==========================================
-    let cart = [];
+    let cart = []; // This will be loaded from localStorage (or Supabase auth) later
+    let allProducts = []; // NEW: Cache for all products
 
 
     // ==========================================
-    // 1. PRODUCT DETAIL MODAL LOGIC
+    // 1.5. DYNAMIC PRODUCT LOADING (NEW)
+    // ==========================================
+
+    const featuredContainer = document.getElementById('featured-products-container');
+    const allProductsContainer = document.getElementById('all-products-container');
+
+    /**
+     * Creates the HTML for a single product card.
+     */
+    function createProductCardHTML(product) {
+        // Use placeholder images if database image_url is missing
+        const placeholderImg = `https://via.placeholder.com/300x250/${product.featured ? '8A2BE2' : '39FF14'}/FFFFFF?text=${product.title.replace(' ', '+')}`;
+        const imageUrl = product.image_url ? `url('${product.image_url}')` : `url('${placeholderImg}')`;
+        const smallImageUrl = product.image_url ? product.image_url.replace('/300x250/', '/100x100/') : placeholderImg.replace('/300x250/', '/100x100/');
+
+
+        return `
+        <div class="product-card" 
+             data-id="${product.id}" 
+             data-title="${product.title}"
+             data-category="${product.category}"
+             data-price="${formatPrice(product.price)}"
+             data-image-url="${product.image_url || placeholderImg}"
+             data-small-image-url="${smallImageUrl}" 
+             data-description="${product.description || 'No description available.'}">
+            
+            <div class="product-image" style="background-image: ${imageUrl}; background-size: cover;"></div>
+            <div class="product-info">
+                <h3 class="product-title">${product.title}</h3>
+                <p class="product-category">${product.category}</p>
+                <div class="product-footer">
+                    <span class="product-price">${formatPrice(product.price)}</span>
+                    <button class="add-to-cart-btn">Add <i class="fas fa-shopping-cart"></i></button>
+                </div>
+            </div>
+        </div>
+        `;
+    }
+
+    /**
+     * Fetches all products from Supabase and populates the page.
+     */
+    async function loadProducts() {
+        if (!supabase) return; // Stop if Supabase isn't initialized
+
+        const { data, error } = await supabase
+            .from('products')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+
+        if (error) {
+            console.error('Error fetching products:', error);
+            if(featuredContainer) featuredContainer.innerHTML = `<p style="color:red; text-align:center;">Error loading products. Check RLS or API Keys.</p>`;
+            if(allProductsContainer) allProductsContainer.innerHTML = ``;
+            return;
+        }
+
+        allProducts = data; // Cache all products
+        
+        let featuredHTML = '';
+        let allItemsHTML = '';
+
+        for (const product of data) {
+            const cardHTML = createProductCardHTML(product);
+            
+            if (product.featured) {
+                featuredHTML += cardHTML;
+            }
+            allItemsHTML += cardHTML;
+        }
+
+        // Populate containers
+        if(featuredContainer) featuredContainer.innerHTML = featuredHTML || '<p>No featured items found.</p>';
+        if(allProductsContainer) allProductsContainer.innerHTML = allItemsHTML || '<p>No items found.</p>';
+    
+        // --- IMPORTANT ---
+        // Now that products are loaded, attach all event listeners
+        attachAllEventListeners();
+    }
+
+
+    // ==========================================
+    // 2. PRODUCT DETAIL MODAL LOGIC
     // ==========================================
     
     const modalOverlay = document.getElementById('product-modal-overlay');
     const modalCloseBtn = document.getElementById('modal-close-btn');
-    const productCards = document.querySelectorAll('.product-card'); 
+    
+    // productCards query is now inside attachAllEventListeners
 
     const modalImage = document.getElementById('modal-image');
     const modalTitle = document.getElementById('modal-title');
@@ -35,28 +150,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalAddToCartBtn = document.querySelector('.modal-add-to-cart');
 
     function openModal() {
-        closeAllOverlays(); // Close everything else
+        closeAllOverlays();
         try {
-            const card = this;
-            // Populate modal
-            if(modalImage) modalImage.src = card.dataset.imageUrl.replace('100x100', '600x600').replace('text=Katana', 'text=Neon+Katana').replace('text=Pet', 'text=Cyber+Pet').replace('text=VIP', 'text=VIP+Pass'); // Get large image
+            const card = this; // 'this' is the .product-card that was clicked
+            if(modalImage) modalImage.src = card.dataset.imageUrl;
             if(modalTitle) modalTitle.textContent = card.dataset.title;
             if(modalCategory) modalCategory.textContent = card.dataset.category;
             if(modalPrice) modalPrice.textContent = card.dataset.price;
             if(modalDescription) modalDescription.textContent = card.dataset.description;
-            if(modalQuantityInput) modalQuantityInput.value = 1; // Reset quantity
+            if(modalQuantityInput) modalQuantityInput.value = 1;
 
-            // Store card data on the modal button for when "Add to Cart" is clicked
             if(modalAddToCartBtn) {
+                // Store data on the button
                 modalAddToCartBtn.dataset.id = card.dataset.id;
                 modalAddToCartBtn.dataset.title = card.dataset.title;
                 modalAddToCartBtn.dataset.price = card.dataset.price;
-                modalAddToCartBtn.dataset.image = card.dataset.imageUrl;
+                modalAddToCartBtn.dataset.image = card.dataset.smallImageUrl; // Use small image for cart
             }
 
             if(modalOverlay) modalOverlay.classList.add('active');
         } catch (error) {
-            console.error("Error opening modal:", error);
+            console.error("Error opening modal:", error, this);
         }
     }
 
@@ -64,15 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(modalOverlay) modalOverlay.classList.remove('active');
     }
 
-    // --- Event Listeners for Modal ---
-    productCards.forEach(card => {
-        card.addEventListener('click', function(e) {
-            if (!e.target.closest('.add-to-cart-btn')) {
-                openModal.call(this); // 'this' is the card
-            }
-        });
-    });
-
+    // --- Event Listeners for Modal (base listeners) ---
     if(modalCloseBtn) modalCloseBtn.addEventListener('click', closeModal);
     if(modalOverlay) modalOverlay.addEventListener('click', (e) => {
         if (e.target === modalOverlay) closeModal();
@@ -87,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 id: itemData.id,
                 title: itemData.title,
                 price: itemData.price,
-                image: itemData.image,
+                image: itemData.image, // Use the small image
                 quantity: quantity
             };
             
@@ -98,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ==========================================
-    // 2. SLIDE-DOWN SEARCH LOGIC
+    // 3. SLIDE-DOWN SEARCH LOGIC
     // ==========================================
 
     const searchIcon = document.getElementById('nav-search-icon');
@@ -113,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
             searchPanel.classList.remove('active');
             if(pageContent) pageContent.classList.remove('blur-active');
         } else {
-            closeAllOverlays(); // Close everything else
+            closeAllOverlays();
             searchPanel.classList.add('active');
             if(pageContent) pageContent.classList.add('blur-active');
             setTimeout(() => { if(searchInput) searchInput.focus(); }, 100);
@@ -124,10 +230,31 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault(); 
         toggleSearch();
     });
+    
+    // NEW: Search Filtering Logic
+    if(searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            let filteredHTML = '';
+
+            if (searchTerm.length > 0) {
+                // Filter the 'allProducts' cache
+                const filteredProducts = allProducts.filter(p => p.title.toLowerCase().includes(searchTerm));
+                filteredHTML = filteredProducts.map(createProductCardHTML).join('') || '<p style="color:white; text-align:center;">No items match your search.</p>';
+            } else {
+                // Show all products if search is empty
+                filteredHTML = allProducts.map(createProductCardHTML).join('');
+            }
+            
+            if(allProductsContainer) allProductsContainer.innerHTML = filteredHTML;
+            // RE-ATTACH listeners to the new cards
+            attachProductCardListeners();
+        });
+    }
 
 
     // ==========================================
-    // 2.5. MOBILE HAMBURGER MENU LOGIC
+    // 4. MOBILE HAMBURGER MENU LOGIC
     // ==========================================
     
     const hamburgerIcon = document.getElementById('hamburger-icon');
@@ -136,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileMenuLinks = document.querySelectorAll('.mobile-links a');
 
     function openMobileMenu() {
-        closeAllOverlays(); // Close everything else
+        closeAllOverlays();
         if (mobileMenu) mobileMenu.classList.add('active');
     }
 
@@ -153,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ==========================================
-    // 3. SHOPPING CART LOGIC
+    // 5. SHOPPING CART LOGIC
     // ==========================================
 
     const cartIconWrapper = document.getElementById('cart-icon-wrapper');
@@ -162,17 +289,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const cartBody = document.getElementById('cart-body');
     const cartEmpty = document.getElementById('cart-empty');
     const cartSubtotalEl = document.getElementById('cart-subtotal-price');
-    const addToCartButtons = document.querySelectorAll('.add-to-cart-btn'); 
     const cartNotificationBadge = document.getElementById('cart-notification-badge');
+    // addtoCartButtons query is now inside attachAllEventListeners
 
     // --- Helper Functions ---
     function parsePrice(priceStr) {
         if (!priceStr) return 0;
-        return parseInt(priceStr.replace('R$', '').replace(',', '').trim());
+        return parseInt(String(priceStr).replace('R$', '').replace(',', '').trim());
     }
 
     function formatPrice(priceNum) {
-        return `R$ ${priceNum.toLocaleString()}`;
+        return `R$ ${Number(priceNum).toLocaleString()}`;
     }
 
     function updateCartNotification() {
@@ -189,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Core Cart Functions ---
     function openCart() {
-        closeAllOverlays(); // Close everything else
+        closeAllOverlays();
         if(cartOverlay) cartOverlay.classList.add('active');
     }
 
@@ -198,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function addToCart(item) {
-        const existingItem = cart.find(cartItem => cartItem.id === item.id);
+        const existingItem = cart.find(cartItem => String(cartItem.id) === String(item.id));
         
         if (existingItem) {
             existingItem.quantity += item.quantity || 1;
@@ -212,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function removeFromCart(itemId) {
-        cart = cart.filter(item => item.id !== itemId);
+        cart = cart.filter(item => String(item.id) !== String(itemId));
         renderCart();
         updateCartNotification();
     }
@@ -257,21 +384,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target === cartOverlay) closeCart();
     });
 
-    addToCartButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.stopPropagation(); 
-            const card = e.target.closest('.product-card');
-            const item = {
-                id: card.dataset.id,
-                title: card.dataset.title,
-                price: card.dataset.price,
-                image: card.dataset.imageUrl,
-                quantity: 1
-            };
-            addToCart(item);
-        });
-    });
-
     if(cartBody) {
         cartBody.addEventListener('click', (e) => {
             if (e.target.classList.contains('cart-item-remove')) {
@@ -282,20 +394,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 4. CHECKOUT LOGIC (NEW)
+    // 6. CHECKOUT LOGIC
     // ==========================================
     const checkoutBtn = document.getElementById('cart-checkout-btn');
     const checkoutOverlay = document.getElementById('checkout-modal-overlay');
     const checkoutCloseBtn = document.getElementById('checkout-close-btn');
     const checkoutTotalEl = document.getElementById('checkout-total-price');
     const checkoutForm = document.getElementById('checkout-form');
-    const confirmPurchaseBtn = document.getElementById('confirm-purchase-btn');
     const successPopup = document.getElementById('success-popup');
 
     function openCheckout() {
-        closeAllOverlays(); // Close everything else
+        if (cart.length === 0) {
+            // Use a custom popup/modal later, for now, alert is fine
+            alert('Your cart is empty!'); 
+            return;
+        }
+        closeAllOverlays();
         
-        // Get subtotal from cart and put it in the checkout modal
         if (cartSubtotalEl && checkoutTotalEl) {
             checkoutTotalEl.textContent = cartSubtotalEl.textContent;
         }
@@ -310,7 +425,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function showSuccessMessage() {
         if (successPopup) {
             successPopup.classList.add('active');
-            // Hide popup after 3 seconds
             setTimeout(() => {
                 successPopup.classList.remove('active');
             }, 3000);
@@ -325,49 +439,88 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (checkoutForm) {
         checkoutForm.addEventListener('submit', (e) => {
-            e.preventDefault(); // Stop the form from actually submitting
-            
-            // 1. Show success message
+            e.preventDefault();
             showSuccessMessage();
-            
-            // 2. Close checkout
             closeCheckout();
-            
-            // 3. Clear cart
-            cart = [];
-            
-            // 4. Re-render cart (to show it's empty)
+            cart = []; // Clear cart
             renderCart();
-            
-            // 5. Update notification badge (to 0)
             updateCartNotification();
-
-            // 6. Reset the form fields
             checkoutForm.reset();
         });
     }
 
     
     // ==========================================
-    // 5. GLOBAL "CLICKAWAY" & "ESCAPE" LISTENERS
+    // 7. GLOBAL LISTENERS & INITIALIZATION
     // ==========================================
     
     /**
-     * Helper function to close all open overlays.
+     * Helper to close all overlays.
      */
     function closeAllOverlays() {
         closeModal();
         closeCart();
         closeMobileMenu();
-        closeCheckout(); // NEW
+        closeCheckout();
         if (searchPanel && searchPanel.classList.contains('active')) {
-            toggleSearch(); // This will close it
+            // This is toggleSearch, which also handles blur
+            const isActive = searchPanel.classList.contains('active');
+            if (isActive) {
+                searchPanel.classList.remove('active');
+                if(pageContent) pageContent.classList.remove('blur-active');
+            }
         }
     }
 
+    /**
+     * NEW: Attaches listeners to dynamically loaded product cards
+     */
+    function attachProductCardListeners() {
+        // Find all cards (in featured and all items)
+        const allProductCards = document.querySelectorAll('.product-card');
+        allProductCards.forEach(card => {
+            // Click card to open modal (but not if 'add to cart' clicked)
+            card.addEventListener('click', function(e) {
+                if (!e.target.closest('.add-to-cart-btn')) {
+                    openModal.call(this); // 'this' is the card
+                }
+            });
+        });
+
+        // Find all "Add to Cart" buttons
+        const allAddToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+        allAddToCartButtons.forEach(button => {
+            // Remove old listener to prevent duplicates
+            button.replaceWith(button.cloneNode(true));
+        });
+        // Re-query and add new listeners
+        document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                const card = e.target.closest('.product-card');
+                const item = {
+                    id: card.dataset.id,
+                    title: card.dataset.title,
+                    price: card.dataset.price,
+                    image: card.dataset.smallImageUrl, // Use small image
+                    quantity: 1
+                };
+                addToCart(item);
+            });
+        });
+    }
+
+    /**
+     * NEW: A single function to attach all NON-PRODUCT listeners
+     */
+    function attachAllEventListeners() {
+        // This is now called *after* products load
+        attachProductCardListeners(); 
+    }
+
+    // --- Global Key/Click Listeners ---
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
-            // This function now handles all overlays
             closeAllOverlays();
         }
     });
@@ -384,8 +537,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Initial render on page load
-    renderCart();
-    updateCartNotification();
-
+    // ==========================================
+    // 8. INITIAL PAGE LOAD
+    // ==========================================
+    
+    renderCart(); // Render empty cart
+    updateCartNotification(); // Update badge (to 0)
+    
+    // Load products if Supabase is connected
+    if (supabase) {
+        loadProducts(); // Fetch products and *then* attach listeners
+    }
+    
 });
