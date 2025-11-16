@@ -265,7 +265,7 @@ body {
 .search-slide-content .search-icon-large {
     position: absolute;
     left: 1.5rem; /* 24px */
-    top: 7.75rem; /* 6rem + 1rem (padding) + 0.75rem (half font) */
+    top: 7.75rem; /* Aligns icon with padding-top + half of input height */
     transform: translateY(-50%); /* Center vertically */
     font-size: 1.5rem;
     color: var(--secondary-green);
@@ -427,14 +427,19 @@ body {
     padding: 3rem 0;
 }
 
+/* --- UPDATED: Fixed-size card grid --- */
 .grid-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    /* This creates fixed 280px columns and centers them */
+    grid-template-columns: repeat(auto-fit, 280px);
+    justify-content: center;
+    
     gap: 1.5rem;
     padding: 0 5%;
     min-height: 150px;
     position: relative;
 }
+/* --- End fixed-size card grid --- */
 
 .grid-title {
     font-family: var(--font-headings);
