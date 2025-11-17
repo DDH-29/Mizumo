@@ -337,6 +337,32 @@ document.addEventListener('DOMContentLoaded', () => {
         saveCart(); // NEW: Save cart on change
     }
 
+    // NEW: Decrease quantity or remove
+    function decreaseCartItem(itemId) {
+        const item = cart.find(cartItem => String(cartItem.id) === String(itemId));
+        if (item) {
+            item.quantity -= 1;
+            if (item.quantity <= 0) {
+                // Remove item if quantity is 0 or less
+                cart = cart.filter(cartItem => String(cartItem.id) !== String(itemId));
+            }
+        }
+        renderCart();
+        updateCartNotification();
+        saveCart();
+    }
+    
+    // NEW: Increase quantity
+    function increaseCartItem(itemId) {
+        const item = cart.find(cartItem => String(cartItem.id) === String(itemId));
+        if (item) {
+            item.quantity += 1;
+        }
+        renderCart();
+        updateCartNotification();
+        saveCart();
+    }
+
     function removeFromCart(itemId) {
         cart = cart.filter(item => String(item.id) !== String(itemId));
         renderCart();
@@ -357,15 +383,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 const itemPriceNumber = parsePrice(item.price);
                 const itemTotal = itemPriceNumber * item.quantity;
                 subtotal += itemTotal;
+                
+                // NEW: Updated HTML with quantity controls
                 const cartItemHTML = `
                 <div class="cart-item">
                     <img src="${item.imageUrl}" alt="${item.title}" class="cart-item-image">
                     <div class="cart-item-info">
                         <span class="cart-item-title">${item.title}</span>
                         <span class="cart-item-price">${formatPrice(itemPriceNumber)}</span>
-                        <span class="cart-item-quantity">Qty: ${item.quantity}</span>
                     </div>
-                    <i class="fas fa-trash cart-item-remove" data-id="${item.id}"></i>
+                    <div class="cart-quantity-controls">
+                        <button class="cart-quantity-btn cart-item-decrease" data-id="${item.id}">-</button>
+                        <span class="cart-quantity-display">${item.quantity}</span>
+                        <button class="cart-quantity-btn cart-item-increase" data-id="${item.id}">+</button>
+                    </div>
                 </div>
                 `;
                 cartBody.innerHTML += cartItemHTML;
@@ -732,13 +763,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (e.target === cartOverlay) closeAllOverlays();
             });
         }
+        
+        // NEW: Updated cart event listener
         if (cartBody) {
             cartBody.addEventListener('click', (e) => {
-                if (e.target.classList.contains('cart-item-remove')) {
-                    removeFromCart(e.target.dataset.id);
+                if (e.target.classList.contains('cart-item-increase')) {
+                    increaseCartItem(e.target.dataset.id);
+                }
+                if (e.target.classList.contains('cart-item-decrease')) {
+                    // --- THIS IS THE FIX ---
+                    // Was: e.taget.dataset.id
+                    decreaseCartItem(e.target.dataset.id);
+                    // --- END OF FIX ---
                 }
             });
         }
+        
         if (checkoutBtn) checkoutBtn.addEventListener('click', openCheckout);
         if (checkoutCloseBtn) checkoutCloseBtn.addEventListener('click', closeAllOverlays);
         if (checkoutModal) {
@@ -763,9 +803,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         document.addEventListener('click', (e) => {
             if (searchPanel && searchPanel.classList.contains('active')) {
-                const isClickOnIcon = searchIcon.contains(e.target);
-                const isClickInPanel = searchPanel.contains(e.target);
-                if (!isClickOnIcon && !isClickInPanel) {
+                const isClickInsideSearch = searchPanel.contains(e.target);
+                const isClickOnSearchIcon = searchIcon.contains(e.target);
+                if (!isClickInsideSearch && !isClickOnSearchIcon) {
                     closeAllOverlays();
                 }
             }
@@ -775,15 +815,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     // 8. APP INITIALIZATION
     // ==========================================
-    
     initializeDOMElements();
     attachStaticListeners();
-
-    if (supabase) {
-        loadProducts(); // This will call attachAllEventListeners()
-        checkUserSession(); // This will call loadCart()
-    } else {
-        loadCart(); // Load guest cart even if Supabase fails
-    }
+    checkUserSession(); // This will also call loadCart()
+    loadProducts(); // This will also call attachAllEventListeners()
 
 });

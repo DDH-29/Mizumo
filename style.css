@@ -836,21 +836,43 @@ body {
     font-weight: 700;
 }
 
-.cart-item-quantity {
-    font-size: 0.9rem;
-    color: #ccc;
+/* --- NEW: Cart Quantity Controls --- */
+.cart-quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: var(--bg-dark-purple);
+    border: 1px solid var(--primary-purple);
+    border-radius: 5px;
+    align-self: flex-start; /* Don't stretch */
 }
 
-.cart-item-remove {
+.cart-quantity-btn {
+    background: none;
+    border: none;
+    color: var(--text-light);
     font-size: 1.2rem;
-    color: #888;
+    font-weight: 700;
     cursor: pointer;
-    transition: color 0.3s ease;
+    padding: 0.25rem 0.75rem;
+    transition: color 0.2s ease;
 }
-
-.cart-item-remove:hover {
+.cart-quantity-btn:hover {
+    color: var(--secondary-green);
+}
+.cart-quantity-btn.cart-item-decrease:hover {
     color: #ff4d4d;
 }
+
+.cart-quantity-display {
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 0 0.25rem;
+    min-width: 20px;
+    text-align: center;
+}
+/* --- End Cart Quantity Controls --- */
+
 
 .cart-footer {
     padding: 1.5rem;
