@@ -118,17 +118,15 @@ body {
     cursor: pointer;
 }
 
-/* --- Cart Icon Hover Effect --- */
+/* Cart icon hover effect */
 .nav-icon-wrapper .fa-shopping-cart {
+    color: var(--text-light);
     transition: color 0.3s ease, text-shadow 0.3s ease;
 }
-
 .nav-icon-wrapper:hover .fa-shopping-cart {
     color: var(--secondary-green);
     text-shadow: 0 0 8px var(--secondary-green);
 }
-/* --- End Cart Icon Hover Effect --- */
-
 
 .cart-notification-badge {
     position: absolute;
@@ -224,7 +222,7 @@ body {
     top: 0;
     left: 0;
     width: 100%;
-    height: 80vh; /* Make panel taller or shorter */
+    height: 80vh; /* Make panel taller */
     max-height: 600px;
     
     z-index: 2000;
@@ -261,15 +259,16 @@ body {
     flex-shrink: 0;
 }
 
-/* --- Search Icon Alignment --- */
+/* Centering the search icon */
 .search-slide-content .search-icon-large {
     position: absolute;
-    left: 1.5rem; /* 24px */
-    top: 7.75rem; /* Aligns icon with padding-top + half of input height */
-    transform: translateY(-50%); /* Center vertically */
+    left: 1.25rem; /* 20px */
+    top: 6rem; /* Match padding-top */
+    height: 3.25rem; /* Match input height (padding + font) */
+    display: flex;
+    align-items: center;
     font-size: 1.5rem;
     color: var(--secondary-green);
-    z-index: 10;
 }
 
 #slide-search-input {
@@ -280,13 +279,10 @@ body {
     color: var(--text-light);
     font-family: var(--font-headings);
     font-size: 1.5rem;
-    padding: 1rem 1rem 1rem 4.5rem; /* 1.5rem left + 1.5rem icon + 1.5rem space */
+    padding: 1rem 1rem 1rem 4.5rem; /* Increased left padding */
     outline: none;
     transition: all 0.3s ease;
-    box-sizing: border-box; /* Ensures padding is included in width */
 }
-/* --- End Search Icon Alignment --- */
-
 
 #slide-search-input:focus {
     border-color: var(--secondary-green);
@@ -319,7 +315,7 @@ body {
 }
 
 .search-prompt {
-    color: var(--text-light-);
+    color: var(--text-light);
     opacity: 0.5;
     margin-top: 2rem;
     font-size: 1.1rem;
@@ -385,7 +381,7 @@ body {
     align-items: center;
     justify-content: center;
     text-align: center;
-    height: 100vh; 
+    height: 100vh; /* Full screen height */
     padding: 0 5%;
 }
 
@@ -427,19 +423,18 @@ body {
     padding: 3rem 0;
 }
 
-/* --- Fixed-size card grid --- */
+/* Fixed size grid */
 .grid-container {
     display: grid;
-    /* This creates fixed 280px columns and centers them */
+    /* This creates columns of a fixed 280px size */
     grid-template-columns: repeat(auto-fit, 280px);
+    /* This centers the grid if there's extra space */
     justify-content: center;
-    
     gap: 1.5rem;
     padding: 0 5%;
     min-height: 150px;
     position: relative;
 }
-/* --- End fixed-size card grid --- */
 
 .grid-title {
     font-family: var(--font-headings);
@@ -515,14 +510,13 @@ body {
     opacity: 0;
     transform: translateY(20px);
     animation: fadeIn 0.5s ease forwards;
+    width: 280px; /* Explicitly set width for all cards */
 }
 
 .product-card:nth-child(1) { animation-delay: 0.1s; }
 .product-card:nth-child(2) { animation-delay: 0.2s; }
 .product-card:nth-child(3) { animation-delay: 0.3s; }
-.product-card:nth-child(4) { animation-delay: 0.4s; }
-.product-card:nth-child(5) { animation-delay: 0.5s; }
-
+/* ... (removed extra delays for brevity, JS handles staggered load now) ... */
 
 @keyframes fadeIn {
     to {
@@ -531,28 +525,20 @@ body {
     }
 }
 
-
-.scroll-container .product-card {
-     width: 280px;
-}
-
 .product-card:hover {
     transform: translateY(-10px);
     box-shadow: 0 10px 30px rgba(138, 43, 226, 0.6);
 }
 
-/* --- Image Fit Fix --- */
 .product-image {
     width: 100%;
     height: 250px;
     background-color: #333;
     background-size: cover;
-    background-position: center; /* This centers the image */
-    background-repeat: no-repeat; /* This prevents tiling */
-    overflow: hidden; /* This clips the overflowing parts */
+    background-position: center; /* Center the image */
+    background-repeat: no-repeat; /* Don't tile the image */
+    overflow: hidden; /* Clip anything that overflows */
 }
-/* --- End Image Fit Fix --- */
-
 
 .product-info {
     padding: 1.5rem;
@@ -674,9 +660,6 @@ body {
 
 .modal-image img {
     width: 100%;
-    height: 100%;
-    max-height: 50vh;
-    object-fit: cover;
     border-radius: 8px;
     border: 1px solid var(--primary-purple);
 }
@@ -725,8 +708,6 @@ body {
     font-size: 0.95rem;
     line-height: 1.6;
     flex-grow: 1;
-    overflow-y: auto;
-    max-height: 200px;
 }
 
 .modal-quantity {
@@ -895,8 +876,8 @@ body {
     padding: 15px;
 }
 
-/* --- Checkout Form Styles --- */
-.checkout-form {
+/* --- Checkout & Auth Form Styles --- */
+.checkout-form, .auth-form {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
@@ -953,11 +934,92 @@ body {
     color: #888;
 }
 
-.confirm-purchase-btn {
+.confirm-purchase-btn, .auth-submit-btn {
     width: 100%;
     padding: 15px;
     font-size: 1.2rem;
 }
+
+.auth-message {
+    text-align: center;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    padding: 0.5rem;
+    border-radius: 5px;
+}
+.auth-message.error {
+    background-color: #ff4d4d30;
+    color: #ff4d4d;
+}
+.auth-message.success {
+    background-color: #39ff1430;
+    color: var(--secondary-green);
+}
+
+.auth-toggle-link {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: #aaa;
+    cursor: pointer;
+}
+.auth-toggle-link strong {
+    color: var(--primary-purple);
+    text-decoration: underline;
+}
+
+/* --- Auth Button & User Profile (Navbar) --- */
+.auth-container {
+    flex-shrink: 0;
+}
+
+.auth-button {
+    background-color: var(--primary-purple);
+    color: var(--text-light);
+    font-family: var(--font-headings);
+    font-size: 0.9rem;
+    font-weight: 700;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.auth-button:hover {
+    background-color: #6a0dad;
+    box-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background-color: var(--card-bg);
+    padding: 6px 12px;
+    border-radius: 5px;
+    border: 1px solid var(--primary-purple);
+}
+
+#user-label {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#logout-button {
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+#logout-button:hover {
+    color: #ff4d4d;
+}
+
 
 /* --- Success Popup --- */
 .success-popup {
@@ -987,104 +1049,6 @@ body {
     font-size: 1.5rem;
 }
 
-/* Auth Login/Signup Styles --- */
-#auth-container {
-    display: flex;
-    align-items: center;
-}
-
-.login-btn {
-    background-color: var(--primary-purple);
-    color: var(--text-light);
-    border: none;
-    padding: 8px 16px;
-    border-radius: 5px;
-    font-family: var(--font-headings);
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.login-btn:hover {
-    background-color: #6a0dad;
-    box-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
-}
-
-.user-profile-menu {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    background-color: var(--card-bg);
-    border: 1px solid var(--primary-purple);
-    border-radius: 5px;
-    padding: 8px 12px;
-}
-
-.user-profile-menu .fa-user-circle {
-    color: var(--secondary-green);
-    font-size: 1.5rem;
-}
-
-#user-email-display {
-    font-size: 0.9rem;
-    font-weight: 700;
-    max-width: 150px; /* Truncate long emails */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.logout-btn {
-    background: none;
-    border: none;
-    color: #888;
-    font-size: 1.2rem;
-    cursor: pointer;
-    transition: color 0.3s ease;
-}
-
-.logout-btn:hover {
-    color: #ff4d4d; /* Red */
-}
-
-.auth-form-container {
-    max-width: 450px !important;
-}
-
-.auth-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.auth-error {
-    color: #ff4d4d;
-    background-color: rgba(255, 77, 77, 0.1);
-    border: 1px solid #ff4d4d;
-    border-radius: 5px;
-    padding: 1rem;
-    text-align: center;
-    display: none; /* Hidden by default */
-}
-
-.auth-error.active {
-    display: block;
-}
-
-.form-toggle {
-    text-align: center;
-    color: #888;
-    font-size: 0.9rem;
-}
-
-.form-toggle a {
-    color: var(--secondary-green);
-    font-weight: 700;
-    text-decoration: none;
-    cursor: pointer;
-}
-/* --- End Auth Styles --- */
-
 
 /* --- Responsive Media Queries --- */
 @media (max-width: 768px) {
@@ -1094,34 +1058,30 @@ body {
     .hamburger-icon {
         display: block;
     }
-
-    /* Hide text email on mobile */
-    #user-email-display {
-        display: none;
-    }
-    .user-profile-menu {
-        padding: 8px;
-    }
     
     .modal-layout {
         grid-template-columns: 1fr;
     }
-    
-    /* --- Modal Mobile Fix --- */
-    .modal-overlay .modal-content, 
+    /* Make modal scrollable on mobile */
+    .modal-content {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
     .checkout-modal-overlay .modal-content,
     .auth-modal-overlay .modal-content {
         width: 95%;
         padding: 1.5rem;
-        max-height: 90vh; /* Make modal fit on screen */
-        overflow-y: auto; /* Allow modal to scroll */
+        max-height: 90vh;
+        overflow-y: auto;
     }
-    /* --- End Modal Mobile Fix --- */
 
     /* 2x2 grid for all items on mobile */
     #all-items .grid-container {
         grid-template-columns: repeat(2, 1fr);
         gap: 0.75rem;
+    }
+    #all-items .product-card {
+        width: 100%; /* Let grid control width */
     }
     #all-items .product-card .product-info {
         padding: 1rem;

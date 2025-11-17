@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function createSearchResultHTML(product) {
         const price = product.price ? formatPrice(product.price) : 'Free';
-        const imageUrl = product.image_url || `https://via.placeholder.com/100x100/8A2BE2/FFFFFF?text=${product.title.replace(' ', '+')}`;
+        const imageUrl = product.image_url || `https::via.placeholder.com/100x100/8A2BE2/FFFFFF?text=${product.title.replace(' ', '+')}`;
 
         return `
         <div class="search-result-item" data-id="${product.id}">
@@ -449,6 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // --- THIS IS THE FIXED LINE (REMOVED THE UNDERSCORE) ---
         const { data, error } = await supabase.auth.signUp({
             email: email,
             password: password,
@@ -644,6 +645,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (authCloseBtn) authCloseBtn.addEventListener('click', closeAllOverlays);
         
+        // --- THIS BLOCK WAS REMOVED PER YOUR REQUEST ---
+        // if (authModal) {
+        //     authModal.addEventListener('click', (e) => {
+        //         if (e.target === authModal) closeAllOverlays();
+        //     });
+        // }
+        // --- END OF REMOVED BLOCK ---
+
         if (authToggleLink) authToggleLink.addEventListener('click', toggleAuthView);
         if (loginForm) loginForm.addEventListener('submit', handleLogin);
         if (signupForm) signupForm.addEventListener('submit', handleSignUp);
