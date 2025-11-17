@@ -2,6 +2,7 @@
 // 1. SUPABASE INTEGRATION
 // ==========================================
 
+// --- PASTE YOUR KEYS HERE ---
 const SUPABASE_URL = 'https://uzjxoandxfclcvpfmuun.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_FgLUWwf9LUxgvJtsI6vP4g_qIY5aqWz';
 
@@ -12,7 +13,7 @@ try {
     throw new Error('Supabase URL is not set. Please update app.js.');
   }
   if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY === 'YOUR_ANON_PUBLIC_KEY') {
-    throw new Error('Supabase Anon Key is not set. Please update app.js.');
+    throw new Error('SupABASE Anon Key is not set. Please update app.js.');
   }
   // Note: The global 'supabase' object comes from the script tag in index.html
   supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -108,7 +109,7 @@ async function loadProducts() {
         }
 
         // Now that products are loaded, attach listeners to them
-        attachAllEventListeners();
+        attachAllEventListeners(); // This is the function that was not being defined
 
     } catch (error) {
         // Show the specific error on the page
@@ -511,6 +512,7 @@ async function handleSignUp(e) {
         return;
     }
 
+    // --- THIS IS THE FIXED LINE ---
     const { data, error } = await supabase.auth.signUp({
         email: email,
         password: password,
@@ -520,6 +522,7 @@ async function handleSignUp(e) {
             }
         }
     });
+    // --- END OF FIX ---
 
     if (error) {
         showAuthMessage(error.message, 'error');
@@ -625,8 +628,9 @@ function attachSearchResultListeners() {
 
 /**
  * Attaches listeners to all static and dynamic product cards.
+ * This is now the main function to call after products are loaded.
  */
-function attachProductCardListeners() {
+function attachAllEventListeners() {
     // We select the containers and delegate events
     const containers = [featuredContainer, allProductsContainer];
     
@@ -731,8 +735,12 @@ function attachStaticListeners() {
     }
     if (authCloseBtn) authCloseBtn.addEventListener('click', closeAllOverlays);
     
-    // THIS IS THE LINE I REMOVED:
-    // if (authModal) authModal.addEventListener('click', (e) => { ... });
+    // This is the listener that was removed to prevent clickaway
+    // if (authModal) {
+    //     authModal.addEventListener('click', (e) => {
+    //         if (e.target === authModal) closeAllOverlays();
+    //     });
+    // }
     
     if (authToggleLink) authToggleLink.addEventListener('click', toggleAuthView);
     if (loginForm) loginForm.addEventListener('submit', handleLogin);
