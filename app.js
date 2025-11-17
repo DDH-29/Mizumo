@@ -7,12 +7,14 @@ const SUPABASE_ANON_KEY = 'sb_publishable_FgLUWwf9LUxgvJtsI6vP4g_qIY5aqWz';
 
 let supabase = null;
 try {
+  // Check if the variables exist and are not the placeholders
   if (!SUPABASE_URL || SUPABASE_URL === 'YOUR_PROJECT_URL') {
     throw new Error('Supabase URL is not set. Please update app.js.');
   }
   if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY === 'YOUR_ANON_PUBLIC_KEY') {
     throw new Error('Supabase Anon Key is not set. Please update app.js.');
   }
+  // Note: The global 'supabase' object comes from the script tag in index.html
   supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   console.log('Mizumo App Initialized with Supabase!');
 
@@ -29,10 +31,18 @@ let allProducts = []; // Store all products in a global array
 const featuredContainer = document.getElementById('featured-products-container');
 const allProductsContainer = document.getElementById('all-products-container');
 
+/**
+ * Creates HTML for a single product card.
+ * @param {object} product - The product object from Supabase.
+ * @returns {string} - The HTML string for the product card.
+ */
 function createProductCardHTML(product) {
-    const price = product.price ? `Rp. ${product.price.toLocaleString()}` : 'Free';
+    // Use 'price' from product, format it, default to 'Free'
+    const price = product.price ? formatPrice(product.price) : 'Free';
+    // Use 'image_url' or a placeholder
     const imageUrl = product.image_url || `https://via.placeholder.com/300x250/8A2BE2/FFFFFF?text=${product.title.replace(' ', '+')}`;
     
+    // Use the product's database 'id' for the data-id attribute
     return `
     <div class="product-card" 
          data-id="${product.id}"
@@ -42,7 +52,7 @@ function createProductCardHTML(product) {
          data-image-url="${product.image_url}"
          data-description="${product.description}"
     >
-        <div class="product-image" style="background-image: url('${imageUrl}');"></div>
+        <div class="product-image" style="background-image: url('${imageUrl}'); background-position: center; background-repeat: no-repeat; overflow: hidden;"></div>
         <div class="product-info">
             <h3 class="product-title">${product.title}</h3>
             <p class="product-category">${product.category}</p>
@@ -55,6 +65,9 @@ function createProductCardHTML(product) {
     `;
 }
 
+/**
+ * Fetches products from Supabase and renders them.
+ */
 async function loadProducts() {
     if (!supabase) return;
 
@@ -65,15 +78,18 @@ async function loadProducts() {
             .order('created_at', { ascending: false });
 
         if (error) {
+            // This is the error message I added to help debug
             throw new Error(`Supabase fetch failed: ${error.message}`);
         }
 
+        // Clear loaders
         featuredContainer.innerHTML = '';
         allProductsContainer.innerHTML = '';
 
-        allProducts = data;
+        allProducts = data; // Store all products
         const featuredProducts = data.filter(product => product.featured === true);
 
+        // Render Featured Products
         if (featuredProducts.length > 0) {
             featuredProducts.forEach(product => {
                 featuredContainer.innerHTML += createProductCardHTML(product);
@@ -82,6 +98,7 @@ async function loadProducts() {
             featuredContainer.innerHTML = '<p style="text-align:center;">No featured products found.</p>';
         }
 
+        // Render All Products
         if (allProducts.length > 0) {
             allProducts.forEach(product => {
                 allProductsContainer.innerHTML += createProductCardHTML(product);
@@ -90,9 +107,11 @@ async function loadProducts() {
             allProductsContainer.innerHTML = '<p style="text-align:center;">No products found.</p>';
         }
 
+        // Now that products are loaded, attach listeners to them
         attachAllEventListeners();
 
     } catch (error) {
+        // Show the specific error on the page
         console.error(error.message);
         featuredContainer.innerHTML = `<p style="color:red; text-align:center;">Error: ${error.message}</p>`;
         allProductsContainer.innerHTML = `<p style="color:red; text-align:center;">Error: ${error.message}</p>`;
@@ -101,10 +120,9 @@ async function loadProducts() {
 
 
 // ==========================================
-// 3. GLOBAL APP STATE
+// 3. GLOBAL CART STATE
 // ==========================================
-let cart = [];
-let currentUser = null; 
+let cart = []; // Stores cart items { id, title, price, imageUrl, quantity }
 
 // ==========================================
 // 4. OVERLAY & MODAL ELEMENTS
@@ -150,46 +168,64 @@ const checkoutForm = document.getElementById('checkout-form');
 const checkoutTotalPriceEl = document.getElementById('checkout-total-price');
 const successPopup = document.getElementById('success-popup');
 
-// Auth Elements
-const loginBtn = document.getElementById('login-btn');
-const userProfileMenu = document.getElementById('user-profile-menu');
-const userEmailDisplay = document.getElementById('user-email-display');
-const logoutBtn = document.getElementById('logout-btn');
+// Auth Modal
 const authModal = document.getElementById('auth-modal-overlay');
 const authCloseBtn = document.getElementById('auth-close-btn');
+const authToggleLink = document.getElementById('auth-toggle-link');
+const authTitle = document.getElementById('auth-title');
 const loginForm = document.getElementById('login-form');
 const signupForm = document.getElementById('signup-form');
-const showSignupFormBtn = document.getElementById('show-signup-form');
-const showLoginFormBtn = document.getElementById('show-login-form');
-const loginErrorMsg = document.getElementById('login-error-msg');
-const signupErrorMsg = document.getElementById('signup-error-msg');
+const authMessage = document.getElementById('auth-message');
+const authButton = document.getElementById('auth-button');
+const userProfile = document.getElementById('user-profile');
+const userLabel = document.getElementById('user-label');
+const logoutButton = document.getElementById('logout-button');
+
 
 // ==========================================
 // 5. HELPER FUNCTIONS
 // ==========================================
+/**
+ * Parses a price string (e.g., "Rp. 300,000") into a number (300000).
+ * @param {string} priceStr 
+ * @returns {number}
+ */
 function parsePrice(priceStr) {
     if (!priceStr) return 0;
-    return parseInt(String(priceStr).replace('Rp.', '').replace(',', '').trim());
+    // Remove "Rp.", commas, and whitespace
+    return parseInt(String(priceStr).replace('Rp.', '').replace(/,/g, '').trim());
 }
 
+/**
+ * Formats a number (300000) into a price string (e.g., "Rp. 300,000").
+ * @param {number} priceNum 
+ * @returns {string}
+ */
 function formatPrice(priceNum) {
     return `Rp. ${priceNum.toLocaleString()}`;
 }
 
+/**
+ * Closes all open modals and overlays.
+ */
 function closeAllOverlays() {
     if (mobileMenu) mobileMenu.classList.remove('active');
     if (searchPanel) searchPanel.classList.remove('active');
     if (cartOverlay) cartOverlay.classList.remove('active');
     if (modalOverlay) modalOverlay.classList.remove('active');
     if (checkoutModal) checkoutModal.classList.remove('active');
-    if (authModal) authModal.classList.remove('active'); 
+    if (authModal) authModal.classList.remove('active');
     if (pageContent) pageContent.classList.remove('blur-active');
     
+    // Clear search results when closing
     if (searchResultsContainer) searchResultsContainer.innerHTML = '<p class="search-prompt">Start typing to see results...</p>';
     if (searchInput) searchInput.value = '';
-
-    if(loginErrorMsg) loginErrorMsg.classList.remove('active');
-    if(signupErrorMsg) signupErrorMsg.classList.remove('active');
+    
+    // Clear auth messages
+    if (authMessage) {
+        authMessage.textContent = '';
+        authMessage.className = 'auth-message';
+    }
 }
 
 // ==========================================
@@ -215,10 +251,16 @@ function toggleSearch() {
         closeAllOverlays();
         searchPanel.classList.add('active');
         pageContent.classList.add('blur-active');
+        // Use a short timeout to ensure focus works after transition
         setTimeout(() => { searchInput.focus(); }, 400);
     }
 }
 
+/**
+ * Creates HTML for a single search result item.
+ * @param {object} product 
+ * @returns {string}
+ */
 function createSearchResultHTML(product) {
     const price = product.price ? formatPrice(product.price) : 'Free';
     const imageUrl = product.image_url || `https://via.placeholder.com/100x100/8A2BE2/FFFFFF?text=${product.title.replace(' ', '+')}`;
@@ -235,6 +277,9 @@ function createSearchResultHTML(product) {
     `;
 }
 
+/**
+ * Filters products based on search input and renders results in the search panel.
+ */
 function filterProducts() {
     const searchTerm = searchInput.value.toLowerCase();
     
@@ -246,6 +291,7 @@ function filterProducts() {
     let productsFound = 0;
     let resultsHTML = '';
 
+    // Search the globally stored 'allProducts' array
     allProducts.forEach(product => {
         if (product.title.toLowerCase().includes(searchTerm)) {
             resultsHTML += createSearchResultHTML(product);
@@ -257,29 +303,38 @@ function filterProducts() {
         searchResultsContainer.innerHTML = `<p class="search-prompt">No products found matching "${searchTerm}".</p>`;
     } else {
         searchResultsContainer.innerHTML = resultsHTML;
+        // Attach listeners to the new search results
         attachSearchResultListeners();
     }
 }
 
 // --- Product Modal Logic ---
+/**
+ * Opens the product detail modal with the correct data.
+ * @param {HTMLElement | object} productOrCard - The card element (from grid) or a product object (from search).
+ */
 function openModal(productOrCard) {
     closeAllOverlays();
     
     let productData;
 
+    // Check if it's an object (from search results) or an element (from card click)
     if (productOrCard.dataset) {
+        // It's a card element, get data from data-attributes
         productData = productOrCard.dataset;
     } else {
+        // It's a product object from search
         productData = {
             id: productOrCard.id,
             title: productOrCard.title,
             category: productOrCard.category,
-            price: formatPrice(productOrCard.price),
+            price: formatPrice(productOrCard.price), // Format the price
             imageUrl: productOrCard.image_url,
             description: productOrCard.description
         };
     }
 
+    // Populate the modal
     modalImage.src = productData.imageUrl || `https://via.placeholder.com/600x600/8A2BE2/FFFFFF?text=${productData.title.replace(' ', '+')}`;
     modalTitle.textContent = productData.title;
     modalCategory.textContent = productData.category;
@@ -287,9 +342,11 @@ function openModal(productOrCard) {
     modalDescription.textContent = productData.description;
     modalQuantityInput.value = 1;
 
+    // Store data on the modal's "Add to Cart" button
     modalAddToCartBtn.dataset.id = productData.id;
     modalAddToCartBtn.dataset.title = productData.title;
     modalAddToCartBtn.dataset.price = productData.price;
+    // Use the small image for cart
     modalAddToCartBtn.dataset.imageUrl = productData.imageUrl; 
 
     modalOverlay.classList.add('active');
@@ -301,6 +358,9 @@ function openCart() {
     cartOverlay.classList.add('active');
 }
 
+/**
+ * Updates the notification badge on the cart icon.
+ */
 function updateCartNotification() {
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
     if (totalItems > 0) {
@@ -312,6 +372,10 @@ function updateCartNotification() {
     }
 }
 
+/**
+ * Adds an item to the cart array and updates the UI.
+ * @param {object} item - The item to add.
+ */
 function addToCart(item) {
     const existingItem = cart.find(cartItem => String(cartItem.id) === String(item.id));
     if (existingItem) {
@@ -323,12 +387,19 @@ function addToCart(item) {
     updateCartNotification();
 }
 
+/**
+ * Removes an item from the cart array by its ID and updates the UI.
+ * @param {string} itemId 
+ */
 function removeFromCart(itemId) {
     cart = cart.filter(item => String(item.id) !== String(itemId));
     renderCart();
     updateCartNotification();
 }
 
+/**
+ * Re-draws the cart sidebar based on the 'cart' array.
+ */
 function renderCart() {
     cartBody.innerHTML = '';
     if (cart.length === 0) {
@@ -361,66 +432,116 @@ function renderCart() {
 
 // --- Checkout Logic ---
 function openCheckout() {
-    if (cart.length === 0) return;
-    
-    if (!currentUser) {
-        alert("Please log in to proceed to checkout."); // You can make this a custom popup
-        openAuthModal();
-        return;
-    }
-    
+    if (cart.length === 0) return; // Don't open if cart is empty
     closeAllOverlays();
     checkoutTotalPriceEl.textContent = cartSubtotalEl.textContent;
     checkoutModal.classList.add('active');
 }
 
+/**
+ * Handles the "Confirm Purchase" button click.
+ * @param {Event} e 
+ */
 function handlePurchase(e) {
-    e.preventDefault();
+    e.preventDefault(); // Stop form from reloading the page
     closeAllOverlays();
-    cart = [];
+    cart = []; // Empty the cart
     renderCart();
     updateCartNotification();
     checkoutForm.reset();
     
+    // Show success popup
     successPopup.classList.add('active');
     setTimeout(() => {
         successPopup.classList.remove('active');
     }, 3000);
 }
 
-// ==========================================
-// 7. AUTH LOGIC (UPDATED)
-// ==========================================
-
-function openAuthModal() {
-    closeAllOverlays();
-    authModal.classList.add('active');
-    loginForm.style.display = 'flex';
-    signupForm.style.display = 'none';
-}
-
-function updateUIForUser(user) {
-    currentUser = user;
-    loginBtn.style.display = 'none';
-    userProfileMenu.style.display = 'flex';
+// --- Auth Logic ---
+/**
+ * Toggles the Auth modal between Login and Sign Up views.
+ * @param {Event} e 
+ */
+function toggleAuthView(e) {
+    e.preventDefault();
+    authMessage.textContent = '';
+    authMessage.className = 'auth-message';
     
-    // NEW: Display username if it exists, otherwise fall back to email
-    const displayName = user.user_metadata.username || user.email;
-    userEmailDisplay.textContent = displayName;
+    if (loginForm.style.display === 'none') {
+        // Switch to Login view
+        loginForm.style.display = 'flex';
+        signupForm.style.display = 'none';
+        authTitle.textContent = 'Login';
+        authToggleLink.innerHTML = 'Don\'t have an account? <strong>Sign Up</strong>';
+    } else {
+        // Switch to Sign Up view
+        loginForm.style.display = 'none';
+        signupForm.style.display = 'flex';
+        authTitle.textContent = 'Sign Up';
+        authToggleLink.innerHTML = 'Already have an account? <strong>Login</strong>';
+    }
 }
 
-function updateUIForGuest() {
-    currentUser = null;
-    loginBtn.style.display = 'block';
-    userProfileMenu.style.display = 'none';
-    userEmailDisplay.textContent = '';
+/**
+ * Shows an error or success message in the auth modal.
+ * @param {string} message 
+ * @param {'error' | 'success'} type 
+ */
+function showAuthMessage(message, type = 'error') {
+    authMessage.textContent = message;
+    authMessage.className = `auth-message ${type}`;
 }
 
+/**
+ * Handles the sign-up form submission.
+ * @param {Event} e 
+ */
+async function handleSignUp(e) {
+    e.preventDefault();
+    showAuthMessage('Signing up...', 'success');
+    
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+    const confirmPassword = e.target.confirmPassword.value;
+    const username = e.target.username.value;
+
+    // Password validation
+    if (password !== confirmPassword) {
+        showAuthMessage('Passwords do not match.', 'error');
+        return;
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+            data: {
+                username: username // Store username in metadata
+            }
+        }
+    });
+
+    if (error) {
+        showAuthMessage(error.message, 'error');
+    } else if (data.user) {
+        showAuthMessage('Sign up successful! Please log in.', 'success');
+        // Switch to login view
+        setTimeout(() => {
+             toggleAuthView(new Event('click')); // Simulate click to switch
+        }, 1000);
+    }
+}
+
+/**
+ * Handles the login form submission.
+ * @param {Event} e 
+ */
 async function handleLogin(e) {
     e.preventDefault();
-    loginErrorMsg.classList.remove('active'); // Clear error
-    const email = loginForm.querySelector('#login-email').value;
-    const password = loginForm.querySelector('#login-password').value;
+    showAuthMessage('Logging in...', 'success');
+    
+    const email = e.target.email.value;
+    const password = e.target.password.value;
 
     const { data, error } = await supabase.auth.signInWithPassword({
         email: email,
@@ -428,207 +549,203 @@ async function handleLogin(e) {
     });
 
     if (error) {
-        loginErrorMsg.textContent = error.message;
-        loginErrorMsg.classList.add('active');
-    } else {
+        showAuthMessage(error.message, 'error');
+    } else if (data.user) {
+        showAuthMessage('Login successful!', 'success');
         updateUIForUser(data.user);
-        closeAllOverlays();
-        loginForm.reset();
+        setTimeout(closeAllOverlays, 1000);
     }
 }
 
-async function handleSignUp(e) {
-    e.preventDefault();
-    signupErrorMsg.classList.remove('active'); // Clear error
-
-    // NEW: Get all form fields
-    const username = signupForm.querySelector('#signup-username').value;
-    const email = signupForm.querySelector('#signup-email').value;
-    const password = signupForm.querySelector('#signup-password').value;
-    const confirmPassword = signupForm.querySelector('#signup-confirm-password').value;
-
-    // NEW: Password validation
-    if (password !== confirmPassword) {
-        signupErrorMsg.textContent = "Passwords do not match.";
-        signupErrorMsg.classList.add('active');
-        return; // Stop the function
-    }
-
-    // NEW: Sign up with username in metadata
-    const { data, error } = await supabase.auth.signUp({
-        email: email,
-        password: password,
-        options: {
-            data: {
-                username: username // This stores the username in user_metadata
-            }
-        }
-    });
-
-    if (error) {
-        signupErrorMsg.textContent = error.message;
-        signupErrorMsg.classList.add('active');
-    } else {
-        // If email confirmation is disabled, user is logged in immediately
-        if (data.user) {
-            updateUIForUser(data.user);
-            closeAllOverlays();
-            signupForm.reset();
-        } else {
-            // If email confirmation is ON
-            alert("Sign up successful! Please check your email to confirm.");
-            closeAllOverlays();
-            signupForm.reset();
-        }
-    }
-}
-
+/**
+ * Handles the logout button click.
+ */
 async function handleLogout() {
     const { error } = await supabase.auth.signOut();
     if (error) {
-        console.error("Error logging out:", error.message);
+        console.error('Error logging out:', error.message);
     } else {
-        updateUIForGuest();
+        updateUIForUser(null);
     }
 }
 
+/**
+ * Updates the navbar to show user info or the login button.
+ * @param {object | null} user - The Supabase user object or null.
+ */
+function updateUIForUser(user) {
+    if (user) {
+        authButton.style.display = 'none';
+        userProfile.style.display = 'flex';
+        // Use username from metadata, fall back to email
+        userLabel.textContent = user.user_metadata?.username || user.email;
+    } else {
+        authButton.style.display = 'block';
+        userProfile.style.display = 'none';
+        userLabel.textContent = '';
+    }
+}
+
+/**
+ * Checks for an existing user session on page load.
+ */
 async function checkUserSession() {
-    const { data, error } = await supabase.auth.getSession();
-    if (error) {
-        console.error("Error getting session:", error.message);
-        updateUIForGuest();
-    } else if (data.session) {
-        updateUIForUser(data.session.user);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+        updateUIForUser(session.user);
     } else {
-        updateUIForGuest();
+        updateUIForUser(null);
     }
-    loadProducts();
 }
 
 
 // ==========================================
-// 8. EVENT LISTENERS
+// 7. EVENT LISTENERS
 // ==========================================
 
+/**
+ * Attaches listeners to the dynamic search result items.
+ */
 function attachSearchResultListeners() {
     const searchResultItems = document.querySelectorAll('.search-result-item');
     searchResultItems.forEach(item => {
         item.addEventListener('click', () => {
+            // Find the full product object from the 'allProducts' array
             const productId = item.dataset.id;
             const product = allProducts.find(p => String(p.id) === String(productId));
             if (product) {
+                // Pass the *object* to openModal
                 openModal(product);
+            } else {
+                console.error("Could not find product with ID:", productId);
             }
         });
     });
 }
 
+/**
+ * Attaches listeners to all static and dynamic product cards.
+ */
 function attachProductCardListeners() {
-    const productCards = document.querySelectorAll('.product-card');
-    productCards.forEach(card => {
-        card.addEventListener('click', (e) => {
-            if (!e.target.closest('.add-to-cart-btn')) {
+    // We select the containers and delegate events
+    const containers = [featuredContainer, allProductsContainer];
+    
+    containers.forEach(container => {
+        if (!container) return;
+        
+        container.addEventListener('click', (e) => {
+            const card = e.target.closest('.product-card');
+            if (!card) return; // Click wasn't on a card
+
+            const isAddToCartButton = e.target.closest('.add-to-cart-btn');
+            
+            if (isAddToCartButton) {
+                // "Add to Cart" button was clicked
+                e.stopPropagation(); // Prevent modal from opening
+                const item = {
+                    id: card.dataset.id,
+                    title: card.dataset.title,
+                    price: card.dataset.price,
+                    imageUrl: card.dataset.imageUrl,
+                    quantity: 1
+                };
+                addToCart(item);
+            } else {
+                // The card itself was clicked
                 openModal(card);
             }
         });
     });
-
-    const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
-    addToCartButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const card = e.target.closest('.product-card');
-            const item = {
-                id: card.dataset.id,
-                title: card.dataset.title,
-                price: card.dataset.price,
-                imageUrl: card.dataset.imageUrl,
-                quantity: 1
-            };
-            addToCart(item);
-        });
-    });
 }
 
-function attachAllEventListeners() {
-    attachProductCardListeners();
-
+/**
+ * Attaches all static event listeners on page load.
+ */
+function attachStaticListeners() {
     // --- Mobile Menu ---
-    hamburgerIcon.addEventListener('click', toggleMobileMenu);
-    mobileMenuClose.addEventListener('click', closeAllOverlays);
-    mobileMenu.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', closeAllOverlays);
-    });
+    if (hamburgerIcon) hamburgerIcon.addEventListener('click', toggleMobileMenu);
+    if (mobileMenuClose) mobileMenuClose.addEventListener('click', closeAllOverlays);
+    if (mobileMenu) {
+        mobileMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', closeAllOverlays);
+        });
+    }
 
     // --- Search ---
-    searchIcon.addEventListener('click', toggleSearch);
-    searchInput.addEventListener('input', filterProducts);
+    if (searchIcon) searchIcon.addEventListener('click', toggleSearch);
+    if (searchInput) searchInput.addEventListener('input', filterProducts);
 
     // --- Product Modal ---
-    modalCloseBtn.addEventListener('click', closeAllOverlays);
-    modalOverlay.addEventListener('click', (e) => {
-        if (e.target === modalOverlay) closeAllOverlays();
-    });
-    modalAddToCartBtn.addEventListener('click', () => {
-        const item = {
-            id: modalAddToCartBtn.dataset.id,
-            title: modalAddToCartBtn.dataset.title,
-            price: modalAddToCartBtn.dataset.price,
-            imageUrl: modalAddToCartBtn.dataset.imageUrl,
-            quantity: parseInt(modalQuantityInput.value) || 1
-        };
-        addToCart(item);
-        closeAllOverlays();
-    });
+    if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeAllOverlays);
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) closeAllOverlays();
+        });
+    }
+    if (modalAddToCartBtn) {
+        modalAddToCartBtn.addEventListener('click', () => {
+            const item = {
+                id: modalAddToCartBtn.dataset.id,
+                title: modalAddToCartBtn.dataset.title,
+                price: modalAddToCartBtn.dataset.price,
+                imageUrl: modalAddToCartBtn.dataset.imageUrl,
+                quantity: parseInt(modalQuantityInput.value) || 1
+            };
+            addToCart(item);
+            closeAllOverlays();
+        });
+    }
 
     // --- Cart ---
-    cartIconWrapper.addEventListener('click', openCart);
-    cartCloseBtn.addEventListener('click', closeAllOverlays);
-    cartOverlay.addEventListener('click', (e) => {
-        if (e.target === cartOverlay) closeAllOverlays();
-    });
-    cartBody.addEventListener('click', (e) => {
-        if (e.target.classList.contains('cart-item-remove')) {
-            removeFromCart(e.target.dataset.id);
-        }
-    });
+    if (cartIconWrapper) cartIconWrapper.addEventListener('click', openCart);
+    if (cartCloseBtn) cartCloseBtn.addEventListener('click', closeAllOverlays);
+    if (cartOverlay) {
+        cartOverlay.addEventListener('click', (e) => {
+            if (e.target === cartOverlay) closeAllOverlays();
+        });
+    }
+    if (cartBody) {
+        cartBody.addEventListener('click', (e) => {
+            if (e.target.classList.contains('cart-item-remove')) {
+                removeFromCart(e.target.dataset.id);
+            }
+        });
+    }
 
     // --- Checkout ---
-    checkoutBtn.addEventListener('click', openCheckout);
-    checkoutCloseBtn.addEventListener('click', closeAllOverlays);
-    checkoutModal.addEventListener('click', (e) => {
-        if (e.target === checkoutModal) closeAllOverlays();
-    });
-    checkoutForm.addEventListener('submit', handlePurchase);
-    
-    // --- Auth Listeners ---
-    loginBtn.addEventListener('click', openAuthModal);
-    logoutBtn.addEventListener('click', handleLogout);
-    authCloseBtn.addEventListener('click', closeAllOverlays);
-    authModal.addEventListener('click', (e) => {
-        if (e.target === authModal) closeAllOverlays();
-    });
-    
-    showSignupFormBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        loginForm.style.display = 'none';
-        signupForm.style.display = 'flex';
-    });
-    showLoginFormBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        loginForm.style.display = 'flex';
-        signupForm.style.display = 'none';
-    });
+    if (checkoutBtn) checkoutBtn.addEventListener('click', openCheckout);
+    if (checkoutCloseBtn) checkoutCloseBtn.addEventListener('click', closeAllOverlays);
+    if (checkoutModal) {
+        checkoutModal.addEventListener('click', (e) => {
+            if (e.target === checkoutModal) closeAllOverlays();
+        });
+    }
+    if (checkoutForm) checkoutForm.addEventListener('submit', handlePurchase);
 
-    loginForm.addEventListener('submit', handleLogin);
-    signupForm.addEventListener('submit', handleSignUp);
+    // --- Auth ---
+    if (authButton) {
+        authButton.addEventListener('click', () => {
+            closeAllOverlays();
+            authModal.classList.add('active');
+        });
+    }
+    if (authCloseBtn) authCloseBtn.addEventListener('click', closeAllOverlays);
+    
+    // THIS IS THE LINE I REMOVED:
+    // if (authModal) authModal.addEventListener('click', (e) => { ... });
+    
+    if (authToggleLink) authToggleLink.addEventListener('click', toggleAuthView);
+    if (loginForm) loginForm.addEventListener('submit', handleLogin);
+    if (signupForm) signupForm.addEventListener('submit', handleSignUp);
+    if (logoutButton) logoutButton.addEventListener('click', handleLogout);
 
     // --- Global Listeners ---
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeAllOverlays();
     });
+    // This listener closes the search panel, but not other modals
     document.addEventListener('click', (e) => {
-        if (searchPanel.classList.contains('active')) {
+        if (searchPanel && searchPanel.classList.contains('active')) {
             const isClickOnIcon = searchIcon.contains(e.target);
             const isClickInPanel = searchPanel.contains(e.target);
             if (!isClickOnIcon && !isClickInPanel) {
@@ -640,8 +757,14 @@ function attachAllEventListeners() {
 
 
 // ==========================================
-// 9. APP INITIALIZATION
+// 8. APP INITIALIZATION
 // ==========================================
+// First, attach all static listeners
+attachStaticListeners();
+// Then, if Supabase is connected, load products (which attaches dynamic listeners)
 if (supabase) {
-    checkUserSession();
+    loadProducts();
+    checkUserSession(); // Check for a logged-in user
 }
+// Initial render for cart (to show 0)
+renderCart();
