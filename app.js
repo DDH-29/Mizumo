@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
 
     // --- PASTE YOUR KEYS HERE ---
-    const SUPABASE_URL = 'Yhttps://uzjxoandxfclcvpfmuun.supabase.co';
+    const SUPABASE_URL = 'https://uzjxoandxfclcvpfmuun.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_FgLUWwf9LUxgvJtsI6vP4g_qIY5aqWz';
 
     let supabase = null;
