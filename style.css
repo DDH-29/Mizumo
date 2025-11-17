@@ -602,7 +602,7 @@ body {
 }
 
 /* --- Product Detail & Checkout Modals --- */
-.modal-overlay, .checkout-modal-overlay {
+.modal-overlay, .checkout-modal-overlay, .auth-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -619,7 +619,7 @@ body {
     transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
-.modal-overlay.active, .checkout-modal-overlay.active {
+.modal-overlay.active, .checkout-modal-overlay.active, .auth-modal-overlay.active {
     opacity: 1;
     visibility: visible;
 }
@@ -637,13 +637,15 @@ body {
     transition: transform 0.3s ease;
 }
 
-.checkout-modal-overlay .modal-content {
+.checkout-modal-overlay .modal-content,
+.auth-modal-overlay .modal-content {
     max-width: 500px;
 }
 
 
 .modal-overlay.active .modal-content, 
-.checkout-modal-overlay.active .modal-content {
+.checkout-modal-overlay.active .modal-content,
+.auth-modal-overlay.active .modal-content {
     transform: scale(1);
 }
 
@@ -672,6 +674,9 @@ body {
 
 .modal-image img {
     width: 100%;
+    height: 100%;
+    max-height: 50vh;
+    object-fit: cover;
     border-radius: 8px;
     border: 1px solid var(--primary-purple);
 }
@@ -720,6 +725,8 @@ body {
     font-size: 0.95rem;
     line-height: 1.6;
     flex-grow: 1;
+    overflow-y: auto;
+    max-height: 200px;
 }
 
 .modal-quantity {
@@ -980,6 +987,104 @@ body {
     font-size: 1.5rem;
 }
 
+/* Auth Login/Signup Styles --- */
+#auth-container {
+    display: flex;
+    align-items: center;
+}
+
+.login-btn {
+    background-color: var(--primary-purple);
+    color: var(--text-light);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    font-family: var(--font-headings);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.login-btn:hover {
+    background-color: #6a0dad;
+    box-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
+}
+
+.user-profile-menu {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background-color: var(--card-bg);
+    border: 1px solid var(--primary-purple);
+    border-radius: 5px;
+    padding: 8px 12px;
+}
+
+.user-profile-menu .fa-user-circle {
+    color: var(--secondary-green);
+    font-size: 1.5rem;
+}
+
+#user-email-display {
+    font-size: 0.9rem;
+    font-weight: 700;
+    max-width: 150px; /* Truncate long emails */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.logout-btn {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.logout-btn:hover {
+    color: #ff4d4d; /* Red */
+}
+
+.auth-form-container {
+    max-width: 450px !important;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.auth-error {
+    color: #ff4d4d;
+    background-color: rgba(255, 77, 77, 0.1);
+    border: 1px solid #ff4d4d;
+    border-radius: 5px;
+    padding: 1rem;
+    text-align: center;
+    display: none; /* Hidden by default */
+}
+
+.auth-error.active {
+    display: block;
+}
+
+.form-toggle {
+    text-align: center;
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.form-toggle a {
+    color: var(--secondary-green);
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+}
+/* --- End Auth Styles --- */
+
 
 /* --- Responsive Media Queries --- */
 @media (max-width: 768px) {
@@ -989,14 +1094,23 @@ body {
     .hamburger-icon {
         display: block;
     }
+
+    /* Hide text email on mobile */
+    #user-email-display {
+        display: none;
+    }
+    .user-profile-menu {
+        padding: 8px;
+    }
     
     .modal-layout {
         grid-template-columns: 1fr;
     }
     
-    /* --- UPDATED: Modal Mobile Fix --- */
+    /* --- Modal Mobile Fix --- */
     .modal-overlay .modal-content, 
-    .checkout-modal-overlay .modal-content {
+    .checkout-modal-overlay .modal-content,
+    .auth-modal-overlay .modal-content {
         width: 95%;
         padding: 1.5rem;
         max-height: 90vh; /* Make modal fit on screen */

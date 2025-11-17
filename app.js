@@ -2,8 +2,8 @@
 // 1. SUPABASE INTEGRATION
 // ==========================================
 
-const SUPABASE_URL = 'https://uzjxoandxfclcvpfmuun.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_FgLUWwf9LUxgvJtsI6vP4g_qIY5aqWz';
+const SUPABASE_URL = 'YOUR_PROJECT_URL';
+const SUPABASE_ANON_KEY = 'YOUR_ANON_PUBLIC_KEY';
 
 let supabase = null;
 try {
@@ -101,9 +101,10 @@ async function loadProducts() {
 
 
 // ==========================================
-// 3. GLOBAL CART STATE
+// 3. GLOBAL APP STATE
 // ==========================================
 let cart = [];
+let currentUser = null; //To store user data
 
 // ==========================================
 // 4. OVERLAY & MODAL ELEMENTS
@@ -119,7 +120,7 @@ const mobileMenuClose = document.getElementById('mobile-menu-close');
 const searchIcon = document.getElementById('nav-search-icon');
 const searchPanel = document.getElementById('search-slide-down');
 const searchInput = document.getElementById('slide-search-input');
-const searchResultsContainer = document.getElementById('search-results-container'); // NEW
+const searchResultsContainer = document.getElementById('search-results-container');
 
 // Product Modal
 const modalOverlay = document.getElementById('product-modal-overlay');
@@ -149,6 +150,20 @@ const checkoutForm = document.getElementById('checkout-form');
 const checkoutTotalPriceEl = document.getElementById('checkout-total-price');
 const successPopup = document.getElementById('success-popup');
 
+//Auth Elements
+const loginBtn = document.getElementById('login-btn');
+const userProfileMenu = document.getElementById('user-profile-menu');
+const userEmailDisplay = document.getElementById('user-email-display');
+const logoutBtn = document.getElementById('logout-btn');
+const authModal = document.getElementById('auth-modal-overlay');
+const authCloseBtn = document.getElementById('auth-close-btn');
+const loginForm = document.getElementById('login-form');
+const signupForm = document.getElementById('signup-form');
+const showSignupFormBtn = document.getElementById('show-signup-form');
+const showLoginFormBtn = document.getElementById('show-login-form');
+const loginErrorMsg = document.getElementById('login-error-msg');
+const signupErrorMsg = document.getElementById('signup-error-msg');
+
 // ==========================================
 // 5. HELPER FUNCTIONS
 // ==========================================
@@ -167,10 +182,16 @@ function closeAllOverlays() {
     if (cartOverlay) cartOverlay.classList.remove('active');
     if (modalOverlay) modalOverlay.classList.remove('active');
     if (checkoutModal) checkoutModal.classList.remove('active');
+    if (authModal) authModal.classList.remove('active'); // NEW
     if (pageContent) pageContent.classList.remove('blur-active');
+    
     // Clear search results when closing
     if (searchResultsContainer) searchResultsContainer.innerHTML = '<p class="search-prompt">Start typing to see results...</p>';
     if (searchInput) searchInput.value = '';
+
+    // Clear auth errors
+    if(loginErrorMsg) loginErrorMsg.classList.remove('active');
+    if(signupErrorMsg) signupErrorMsg.classList.remove('active');
 }
 
 // ==========================================
@@ -200,11 +221,6 @@ function toggleSearch() {
     }
 }
 
-/**
- * Creates HTML for a single search result item.
- * @param {object} product 
- * @returns {string}
- */
 function createSearchResultHTML(product) {
     const price = product.price ? formatPrice(product.price) : 'Free';
     const imageUrl = product.image_url || `https://via.placeholder.com/100x100/8A2BE2/FFFFFF?text=${product.title.replace(' ', '+')}`;
@@ -221,9 +237,6 @@ function createSearchResultHTML(product) {
     `;
 }
 
-/**
-Filters products and shows results IN the search panel.
- */
 function filterProducts() {
     const searchTerm = searchInput.value.toLowerCase();
     
@@ -246,26 +259,19 @@ function filterProducts() {
         searchResultsContainer.innerHTML = `<p class="search-prompt">No products found matching "${searchTerm}".</p>`;
     } else {
         searchResultsContainer.innerHTML = resultsHTML;
-        // Attach listeners to the new search results
         attachSearchResultListeners();
     }
 }
 
 // --- Product Modal Logic ---
-/**
- * @param {HTMLElement | object} productOrCard - The card element or a product object
- */
 function openModal(productOrCard) {
     closeAllOverlays();
     
     let productData;
 
-    // Check if it's an object (from search results) or an element (from card click)
     if (productOrCard.dataset) {
-        // It's a card element
         productData = productOrCard.dataset;
     } else {
-        // It's a product object
         productData = {
             id: productOrCard.id,
             title: productOrCard.title,
@@ -276,7 +282,6 @@ function openModal(productOrCard) {
         };
     }
 
-    // Get data from the data-attributes
     modalImage.src = productData.imageUrl || `https://via.placeholder.com/600x600/8A2BE2/FFFFFF?text=${productData.title.replace(' ', '+')}`;
     modalTitle.textContent = productData.title;
     modalCategory.textContent = productData.category;
@@ -284,11 +289,9 @@ function openModal(productOrCard) {
     modalDescription.textContent = productData.description;
     modalQuantityInput.value = 1;
 
-    // Store card data on the modal button
     modalAddToCartBtn.dataset.id = productData.id;
     modalAddToCartBtn.dataset.title = productData.title;
     modalAddToCartBtn.dataset.price = productData.price;
-    // Use the small image for cart
     modalAddToCartBtn.dataset.imageUrl = productData.imageUrl; 
 
     modalOverlay.classList.add('active');
@@ -361,6 +364,14 @@ function renderCart() {
 // --- Checkout Logic ---
 function openCheckout() {
     if (cart.length === 0) return;
+    
+    //Check for login
+    if (!currentUser) {
+        alert("Please log in to proceed to checkout."); // You can make this a custom popup
+        openAuthModal();
+        return;
+    }
+    
     closeAllOverlays();
     checkoutTotalPriceEl.textContent = cartSubtotalEl.textContent;
     checkoutModal.classList.add('active');
@@ -381,24 +392,114 @@ function handlePurchase(e) {
 }
 
 // ==========================================
-// 7. EVENT LISTENERS
+// 7. NEW: AUTH LOGIC
 // ==========================================
 
-/**
-Attaches listeners to the dynamic search result items.
- */
+function openAuthModal() {
+    closeAllOverlays();
+    authModal.classList.add('active');
+    // Default to login form
+    loginForm.style.display = 'flex';
+    signupForm.style.display = 'none';
+}
+
+function updateUIForUser(user) {
+    currentUser = user;
+    loginBtn.style.display = 'none';
+    userProfileMenu.style.display = 'flex';
+    userEmailDisplay.textContent = user.email;
+}
+
+function updateUIForGuest() {
+    currentUser = null;
+    loginBtn.style.display = 'block';
+    userProfileMenu.style.display = 'none';
+    userEmailDisplay.textContent = '';
+}
+
+async function handleLogin(e) {
+    e.preventDefault();
+    const email = loginForm.querySelector('#login-email').value;
+    const password = loginForm.querySelector('#login-password').value;
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+    });
+
+    if (error) {
+        loginErrorMsg.textContent = error.message;
+        loginErrorMsg.classList.add('active');
+    } else {
+        updateUIForUser(data.user);
+        closeAllOverlays();
+        loginForm.reset();
+    }
+}
+
+async function handleSignUp(e) {
+    e.preventDefault();
+    const email = signupForm.querySelector('#signup-email').value;
+    const password = signupForm.querySelector('#signup-password').value;
+
+    const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+    });
+
+    if (error) {
+        signupErrorMsg.textContent = error.message;
+        signupErrorMsg.classList.add('active');
+    } else {
+        // If email confirmation is disabled, user is logged in immediately
+        if (data.user) {
+            updateUIForUser(data.user);
+            closeAllOverlays();
+            signupForm.reset();
+        } else {
+            // If email confirmation is ON
+            alert("Sign up successful! Please check your email to confirm.");
+            closeAllOverlays();
+            signupForm.reset();
+        }
+    }
+}
+
+async function handleLogout() {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+        console.error("Error logging out:", error.message);
+    } else {
+        updateUIForGuest();
+    }
+}
+
+async function checkUserSession() {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+        console.error("Error getting session:", error.message);
+        updateUIForGuest();
+    } else if (data.session) {
+        updateUIForUser(data.session.user);
+    } else {
+        updateUIForGuest();
+    }
+    loadProducts();
+}
+
+
+// ==========================================
+// 8. EVENT LISTENERS
+// ==========================================
+
 function attachSearchResultListeners() {
     const searchResultItems = document.querySelectorAll('.search-result-item');
     searchResultItems.forEach(item => {
         item.addEventListener('click', () => {
-            // Find the full product object from the 'allProducts' array
             const productId = item.dataset.id;
             const product = allProducts.find(p => String(p.id) === String(productId));
             if (product) {
-                // Pass the *object* to openModal
                 openModal(product);
-            } else {
-                console.error("Could not find product with ID:", productId);
             }
         });
     });
@@ -409,7 +510,6 @@ function attachProductCardListeners() {
     productCards.forEach(card => {
         card.addEventListener('click', (e) => {
             if (!e.target.closest('.add-to-cart-btn')) {
-                // Pass the *card element* to openModal
                 openModal(card);
             }
         });
@@ -444,7 +544,7 @@ function attachAllEventListeners() {
 
     // --- Search ---
     searchIcon.addEventListener('click', toggleSearch);
-    searchInput.addEventListener('input', filterProducts); // UPDATED
+    searchInput.addEventListener('input', filterProducts);
 
     // --- Product Modal ---
     modalCloseBtn.addEventListener('click', closeAllOverlays);
@@ -482,6 +582,30 @@ function attachAllEventListeners() {
         if (e.target === checkoutModal) closeAllOverlays();
     });
     checkoutForm.addEventListener('submit', handlePurchase);
+    
+    // Auth Listeners ---
+    loginBtn.addEventListener('click', openAuthModal);
+    logoutBtn.addEventListener('click', handleLogout);
+    authCloseBtn.addEventListener('click', closeAllOverlays);
+    authModal.addEventListener('click', (e) => {
+        if (e.target === authModal) closeAllOverlays();
+    });
+    
+    // Auth form toggling
+    showSignupFormBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        loginForm.style.display = 'none';
+        signupForm.style.display = 'flex';
+    });
+    showLoginFormBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        loginForm.style.display = 'flex';
+        signupForm.style.display = 'none';
+    });
+
+    // Auth form submissions
+    loginForm.addEventListener('submit', handleLogin);
+    signupForm.addEventListener('submit', handleSignUp);
 
     // --- Global Listeners ---
     document.addEventListener('keydown', (e) => {
@@ -500,8 +624,8 @@ function attachAllEventListeners() {
 
 
 // ==========================================
-// 8. APP INITIALIZATION
+// 9. APP INITIALIZATION
 // ==========================================
 if (supabase) {
-    loadProducts();
+    checkUserSession();
 }

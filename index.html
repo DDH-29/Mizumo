@@ -38,13 +38,25 @@
                 <i class="fas fa-shopping-cart"></i>
                 <span class="cart-notification-badge" id="cart-notification-badge"></span>
             </div>
+            
+            <!-- NEW: Auth Container -->
+            <div id="auth-container">
+                <button class="login-btn" id="login-btn">Login</button>
+                
+                <!-- This is hidden by default, shown on login -->
+                <div class="user-profile-menu" id="user-profile-menu" style="display: none;">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="user-email-display">user@example.com</span>
+                    <button class="logout-btn" id="logout-btn">Logout</button>
+                </div>
+            </div>
+            <!-- End Auth Container -->
         </div>
     </nav>
 
     <!-- Mobile Menu Overlay -->
     <div class="mobile-menu-overlay" id="mobile-menu">
         <button class="modal-close" id="mobile-menu-close">&times;</button>
-        
         <div class="mobile-links">
             <a href="#">Home</a>
             <a href="#featured">Featured</a>
@@ -67,7 +79,7 @@
 
     <!-- Page Content Wrapper (for blurring) -->
     <div id="page-content">
-
+        <!-- ... Your Hero, Featured, and All Items sections ... -->
         <!-- Hero Section -->
         <header class="hero">
             <h1>Welcome to Mizumo</h1>
@@ -92,12 +104,12 @@
                 <div class="loader"></div>
             </div>
         </main> 
-
     </div>
 
 
     <!-- Product Detail Modal -->
     <div class="modal-overlay" id="product-modal-overlay">
+        <!-- ... Modal Content ... -->
         <div class="modal-content">
             <button class="modal-close" id="modal-close-btn">&times;</button>
             <div class="modal-layout">
@@ -122,6 +134,7 @@
 
     <!-- Shopping Cart Overlay & Sidebar -->
     <div class="cart-overlay-container" id="cart-overlay-container">
+        <!-- ... Cart Content ... -->
         <div class="cart-sidebar" id="cart-sidebar">
             <div class="cart-header">
                 <h2 class="cart-title">Your Cart</h2>
@@ -134,7 +147,7 @@
                 </div>
             </div>
             <div class="cart-footer">
-                <div class="cart-subtotal">
+                <div class.cart-subtotal>
                     <span>Subtotal:</span>
                     <span id="cart-subtotal-price">Rp. 0</span>
                 </div>
@@ -145,6 +158,7 @@
 
     <!-- Checkout Modal -->
     <div class="modal-overlay checkout-modal-overlay" id="checkout-modal-overlay">
+        <!-- ... Checkout Content ... -->
         <div class="modal-content">
             <button class="modal-close" id="checkout-close-btn">&times;</button>
             <h2 class="modal-title" style="text-align: center; margin-bottom: 2rem;">Checkout</h2>
@@ -170,6 +184,50 @@
                     Confirm Purchase
                 </button>
             </form>
+        </div>
+    </div>
+
+    <!-- NEW: Auth Modal (Login & Sign Up) -->
+    <div class="modal-overlay auth-modal-overlay" id="auth-modal-overlay">
+        <div class="modal-content auth-form-container">
+            <button class="modal-close" id="auth-close-btn">&times;</button>
+
+            <!-- Login Form (Default) -->
+            <form class="auth-form" id="login-form">
+                <h2 class="modal-title" style="text-align: center; margin-bottom: 2rem;">Login</h2>
+                <p class="auth-error" id="login-error-msg"></p>
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" placeholder="your.email@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="cta-button confirm-purchase-btn">Login</button>
+                <p class="form-toggle">
+                    Need an account? <a href="#" id="show-signup-form">Sign Up</a>
+                </p>
+            </form>
+
+            <!-- Sign Up Form (Hidden) -->
+            <form class="auth-form" id="signup-form" style="display: none;">
+                <h2 class="modal-title" style="text-align: center; margin-bottom: 2rem;">Sign Up</h2>
+                <p class="auth-error" id="signup-error-msg"></p>
+                <div class="form-group">
+                    <label for="signup-email">Email</label>
+                    <input type="email" id="signup-email" placeholder="your.email@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">Password</label>
+                    <input type="password" id="signup-password" placeholder="Create a strong password" required>
+                </div>
+                <button type="submit" class="cta-button confirm-purchase-btn">Create Account</button>
+                <p class="form-toggle">
+                    Already have an account? <a href="#" id="show-login-form">Login</a>
+                </p>
+            </form>
+
         </div>
     </div>
 
