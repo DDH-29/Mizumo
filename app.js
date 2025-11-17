@@ -327,6 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateCartNotification() {
+        if (!cartNotificationBadge) return;
         const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
         if (totalItems > 0) {
             cartNotificationBadge.textContent = totalItems;
@@ -499,8 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateUIForUser(user) {
-        // The guard clause is still here, but now it checks the variables
-        // that were assigned in initializeDOMElements()
+        // This is the guard clause that was logging the error
         if (!authButton || !userProfile || !userLabel) {
             console.warn('Auth UI elements not found. Skipping UI update.');
             return; 
