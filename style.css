@@ -118,7 +118,7 @@ body {
     cursor: pointer;
 }
 
-/* --- NEW: Cart Icon Hover Effect --- */
+/* --- Cart Icon Hover Effect --- */
 .nav-icon-wrapper .fa-shopping-cart {
     transition: color 0.3s ease, text-shadow 0.3s ease;
 }
@@ -261,7 +261,7 @@ body {
     flex-shrink: 0;
 }
 
-/* --- UPDATED: Search Icon Alignment --- */
+/* --- Search Icon Alignment --- */
 .search-slide-content .search-icon-large {
     position: absolute;
     left: 1.5rem; /* 24px */
@@ -427,7 +427,7 @@ body {
     padding: 3rem 0;
 }
 
-/* --- UPDATED: Fixed-size card grid --- */
+/* --- Fixed-size card grid --- */
 .grid-container {
     display: grid;
     /* This creates fixed 280px columns and centers them */
@@ -541,7 +541,7 @@ body {
     box-shadow: 0 10px 30px rgba(138, 43, 226, 0.6);
 }
 
-/* --- UPDATED: Image Fit Fix --- */
+/* --- Image Fit Fix --- */
 .product-image {
     width: 100%;
     height: 250px;
@@ -993,10 +993,16 @@ body {
     .modal-layout {
         grid-template-columns: 1fr;
     }
-    .modal-.checkout-modal-overlay .modal-content {
+    
+    /* --- UPDATED: Modal Mobile Fix --- */
+    .modal-overlay .modal-content, 
+    .checkout-modal-overlay .modal-content {
         width: 95%;
         padding: 1.5rem;
+        max-height: 90vh; /* Make modal fit on screen */
+        overflow-y: auto; /* Allow modal to scroll */
     }
+    /* --- End Modal Mobile Fix --- */
 
     /* 2x2 grid for all items on mobile */
     #all-items .grid-container {
