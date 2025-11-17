@@ -10,8 +10,6 @@
     8. App Initialization
 */
 
-// --- THIS IS THE FIX ---
-// We wrap all code in this event listener
 document.addEventListener('DOMContentLoaded', () => {
 
     // ==========================================
@@ -24,42 +22,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let supabase = null;
     try {
-      // Check if the variables exist and are not the placeholders
       if (!SUPABASE_URL || SUPABASE_URL === 'YOUR_PROJECT_URL') {
         throw new Error('Supabase URL is not set. Please update app.js.');
       }
       if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY === 'YOUR_ANON_PUBLIC_KEY') {
         throw new Error('SupABASE Anon Key is not set. Please update app.js.');
       }
-      // Note: The global 'supabase' object comes from the script tag in index.html
       supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       console.log('Mizumo App Initialized with Supabase!');
 
     } catch (error) {
         console.error(error.message);
-        const featuredContainer = document.getElementById('featured-products-container');
-        if(featuredContainer) featuredContainer.innerHTML = `<p style="color:red; text-align:center;">Error: Database not connected. Please check Supabase keys in app.js.</p>`;
+        const el = document.getElementById('featured-products-container');
+        if(el) el.innerHTML = `<p style="color:red; text-align:center;">Error: Database not connected. Please check Supabase keys in app.js.</p>`;
     }
 
     // ==========================================
     // 2. PRODUCT LOADING
     // ==========================================
     let allProducts = []; // Store all products in a global array
-    const featuredContainer = document.getElementById('featured-products-container');
-    const allProductsContainer = document.getElementById('all-products-container');
-
-    /**
-     * Creates HTML for a single product card.
-     * @param {object} product - The product object from Supabase.
-     * @returns {string} - The HTML string for the product card.
-     */
+    
     function createProductCardHTML(product) {
-        // Use 'price' from product, format it, default to 'Free'
         const price = product.price ? formatPrice(product.price) : 'Free';
-        // Use 'image_url' or a placeholder
         const imageUrl = product.image_url || `https://via.placeholder.com/300x250/8A2BE2/FFFFFF?text=${product.title.replace(' ', '+')}`;
         
-        // Use the product's database 'id' for the data-id attribute
         return `
         <div class="product-card" 
              data-id="${product.id}"
@@ -82,9 +68,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    /**
-     * Fetches products from Supabase and renders them.
-     */
     async function loadProducts() {
         if (!supabase) return;
 
@@ -95,18 +78,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 .order('created_at', { ascending: false });
 
             if (error) {
-                // This is the error message I added to help debug
                 throw new Error(`Supabase fetch failed: ${error.message}`);
             }
 
-            // Clear loaders
             featuredContainer.innerHTML = '';
             allProductsContainer.innerHTML = '';
 
-            allProducts = data; // Store all products
+            allProducts = data;
             const featuredProducts = data.filter(product => product.featured === true);
 
-            // Render Featured Products
             if (featuredProducts.length > 0) {
                 featuredProducts.forEach(product => {
                     featuredContainer.innerHTML += createProductCardHTML(product);
@@ -115,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 featuredContainer.innerHTML = '<p style="text-align:center;">No featured products found.</p>';
             }
 
-            // Render All Products
             if (allProducts.length > 0) {
                 allProducts.forEach(product => {
                     allProductsContainer.innerHTML += createProductCardHTML(product);
@@ -124,11 +103,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 allProductsContainer.innerHTML = '<p style="text-align:center;">No products found.</p>';
             }
 
-            // Now that products are loaded, attach listeners to them
             attachAllEventListeners(); 
 
         } catch (error) {
-            // Show the specific error on the page
             console.error(error.message);
             featuredContainer.innerHTML = `<p style="color:red; text-align:center;">Error: ${error.message}</p>`;
             allProductsContainer.innerHTML = `<p style="color:red; text-align:center;">Error: ${error.message}</p>`;
@@ -139,92 +116,85 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     // 3. GLOBAL CART STATE
     // ==========================================
-    let cart = []; // Stores cart items { id, title, price, imageUrl, quantity }
+    let cart = []; 
 
     // ==========================================
-    // 4. OVERLAY & MODAL ELEMENTS
+    // 4. ELEMENT VARIABLES (Initialized in a function)
     // ==========================================
-    const pageContent = document.getElementById('page-content');
+    let pageContent, hamburgerIcon, mobileMenu, mobileMenuClose, searchIcon, 
+        searchPanel, searchInput, searchResultsContainer, modalOverlay, 
+        modalCloseBtn, modalImage, modalTitle, modalCategory, modalPrice, 
+        modalDescription, modalQuantityInput, modalAddToCartBtn, cartIconWrapper, 
+        cartOverlay, cartCloseBtn, cartBody, cartEmpty, cartSubtotalEl, 
+        cartNotificationBadge, checkoutBtn, checkoutModal, checkoutCloseBtn, 
+        checkoutForm, checkoutTotalPriceEl, successPopup, authModal, 
+        authCloseBtn, authToggleLink, authTitle, loginForm, signupForm, 
+        authMessage, authButton, userProfile, userLabel, logoutButton,
+        featuredContainer, allProductsContainer;
 
-    // Mobile Menu
-    const hamburgerIcon = document.getElementById('hamburger-icon');
-    const mobileMenu = document.getElementById('mobile-menu');
-    const mobileMenuClose = document.getElementById('mobile-menu-close');
-
-    // Search
-    const searchIcon = document.getElementById('nav-search-icon');
-    const searchPanel = document.getElementById('search-slide-down');
-    const searchInput = document.getElementById('slide-search-input');
-    const searchResultsContainer = document.getElementById('search-results-container');
-
-    // Product Modal
-    const modalOverlay = document.getElementById('product-modal-overlay');
-    const modalCloseBtn = document.getElementById('modal-close-btn');
-    const modalImage = document.getElementById('modal-image');
-    const modalTitle = document.getElementById('modal-title');
-    const modalCategory = document.getElementById('modal-category');
-    const modalPrice = document.getElementById('modal-price');
-    const modalDescription = document.getElementById('modal-description');
-    const modalQuantityInput = document.getElementById('modal-quantity');
-    const modalAddToCartBtn = document.querySelector('.modal-add-to-cart');
-
-    // Cart Sidebar
-    const cartIconWrapper = document.getElementById('cart-icon-wrapper');
-    const cartOverlay = document.getElementById('cart-overlay-container');
-    const cartCloseBtn = document.getElementById('cart-close-btn');
-    const cartBody = document.getElementById('cart-body');
-    const cartEmpty = document.getElementById('cart-empty');
-    const cartSubtotalEl = document.getElementById('cart-subtotal-price');
-    const cartNotificationBadge = document.getElementById('cart-notification-badge');
-
-    // Checkout Modal
-    const checkoutBtn = document.getElementById('cart-checkout-btn');
-    const checkoutModal = document.getElementById('checkout-modal-overlay');
-    const checkoutCloseBtn = document.getElementById('checkout-close-btn');
-    const checkoutForm = document.getElementById('checkout-form');
-    const checkoutTotalPriceEl = document.getElementById('checkout-total-price');
-    const successPopup = document.getElementById('success-popup');
-
-    // Auth Modal
-    const authModal = document.getElementById('auth-modal-overlay');
-    const authCloseBtn = document.getElementById('auth-close-btn');
-    const authToggleLink = document.getElementById('auth-toggle-link');
-    const authTitle = document.getElementById('auth-title');
-    const loginForm = document.getElementById('login-form');
-    const signupForm = document.getElementById('signup-form');
-    const authMessage = document.getElementById('auth-message');
-    const authButton = document.getElementById('auth-button');
-    const userProfile = document.getElementById('user-profile');
-    const userLabel = document.getElementById('user-label');
-    const logoutButton = document.getElementById('logout-button');
+    /**
+     * Finds all HTML elements and assigns them to variables.
+     * This is the fix for the "null" error.
+     */
+    function initializeDOMElements() {
+        pageContent = document.getElementById('page-content');
+        hamburgerIcon = document.getElementById('hamburger-icon');
+        mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuClose = document.getElementById('mobile-menu-close');
+        searchIcon = document.getElementById('nav-search-icon');
+        searchPanel = document.getElementById('search-slide-down');
+        searchInput = document.getElementById('slide-search-input');
+        searchResultsContainer = document.getElementById('search-results-container');
+        modalOverlay = document.getElementById('product-modal-overlay');
+        modalCloseBtn = document.getElementById('modal-close-btn');
+        modalImage = document.getElementById('modal-image');
+        modalTitle = document.getElementById('modal-title');
+        modalCategory = document.getElementById('modal-category');
+        modalPrice = document.getElementById('modal-price');
+        modalDescription = document.getElementById('modal-description');
+        modalQuantityInput = document.getElementById('modal-quantity');
+        modalAddToCartBtn = document.querySelector('.modal-add-to-cart');
+        cartIconWrapper = document.getElementById('cart-icon-wrapper');
+        cartOverlay = document.getElementById('cart-overlay-container');
+        cartCloseBtn = document.getElementById('cart-close-btn');
+        cartBody = document.getElementById('cart-body');
+        cartEmpty = document.getElementById('cart-empty');
+        cartSubtotalEl = document.getElementById('cart-subtotal-price');
+        cartNotificationBadge = document.getElementById('cart-notification-badge');
+        checkoutBtn = document.getElementById('cart-checkout-btn');
+        checkoutModal = document.getElementById('checkout-modal-overlay');
+        checkoutCloseBtn = document.getElementById('checkout-close-btn');
+        checkoutForm = document.getElementById('checkout-form');
+        checkoutTotalPriceEl = document.getElementById('checkout-total-price');
+        successPopup = document.getElementById('success-popup');
+        authModal = document.getElementById('auth-modal-overlay');
+        authCloseBtn = document.getElementById('auth-close-btn');
+        authToggleLink = document.getElementById('auth-toggle-link');
+        authTitle = document.getElementById('auth-title');
+        loginForm = document.getElementById('login-form');
+        signupForm = document.getElementById('signup-form');
+        authMessage = document.getElementById('auth-message');
+        authButton = document.getElementById('auth-button');
+        userProfile = document.getElementById('user-profile');
+        userLabel = document.getElementById('user-label');
+        logoutButton = document.getElementById('logout-button');
+        featuredContainer = document.getElementById('featured-products-container');
+        allProductsContainer = document.getElementById('all-products-container');
+    }
 
 
     // ==========================================
     // 5. HELPER FUNCTIONS
     // ==========================================
-    /**
-     * Parses a price string (e.g., "Rp. 300,000") into a number (300000).
-     * @param {string} priceStr 
-     * @returns {number}
-     */
     function parsePrice(priceStr) {
         if (!priceStr) return 0;
-        // Remove "Rp.", commas, and whitespace
         return parseInt(String(priceStr).replace('Rp.', '').replace(/,/g, '').trim());
     }
 
-    /**
-     * Formats a number (300000) into a price string (e.g., "Rp. 300,000").
-     * @param {number} priceNum 
-     * @returns {string}
-     */
     function formatPrice(priceNum) {
         return `Rp. ${priceNum.toLocaleString()}`;
     }
 
-    /**
-     * Closes all open modals and overlays.
-     */
     function closeAllOverlays() {
         if (mobileMenu) mobileMenu.classList.remove('active');
         if (searchPanel) searchPanel.classList.remove('active');
@@ -233,12 +203,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (checkoutModal) checkoutModal.classList.remove('active');
         if (authModal) authModal.classList.remove('active');
         if (pageContent) pageContent.classList.remove('blur-active');
-        
-        // Clear search results when closing
         if (searchResultsContainer) searchResultsContainer.innerHTML = '<p class="search-prompt">Start typing to see results...</p>';
         if (searchInput) searchInput.value = '';
-        
-        // Clear auth messages
         if (authMessage) {
             authMessage.textContent = '';
             authMessage.className = 'auth-message';
@@ -268,16 +234,10 @@ document.addEventListener('DOMContentLoaded', () => {
             closeAllOverlays();
             searchPanel.classList.add('active');
             pageContent.classList.add('blur-active');
-            // Use a short timeout to ensure focus works after transition
             setTimeout(() => { searchInput.focus(); }, 400);
         }
     }
 
-    /**
-     * Creates HTML for a single search result item.
-     * @param {object} product 
-     * @returns {string}
-     */
     function createSearchResultHTML(product) {
         const price = product.price ? formatPrice(product.price) : 'Free';
         const imageUrl = product.image_url || `https://via.placeholder.com/100x100/8A2BE2/FFFFFF?text=${product.title.replace(' ', '+')}`;
@@ -294,9 +254,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    /**
-     * Filters products based on search input and renders results in the search panel.
-     */
     function filterProducts() {
         const searchTerm = searchInput.value.toLowerCase();
         
@@ -308,7 +265,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let productsFound = 0;
         let resultsHTML = '';
 
-        // Search the globally stored 'allProducts' array
         allProducts.forEach(product => {
             if (product.title.toLowerCase().includes(searchTerm)) {
                 resultsHTML += createSearchResultHTML(product);
@@ -320,38 +276,29 @@ document.addEventListener('DOMContentLoaded', () => {
             searchResultsContainer.innerHTML = `<p class="search-prompt">No products found matching "${searchTerm}".</p>`;
         } else {
             searchResultsContainer.innerHTML = resultsHTML;
-            // Attach listeners to the new search results
             attachSearchResultListeners();
         }
     }
 
     // --- Product Modal Logic ---
-    /**
-     * Opens the product detail modal with the correct data.
-     * @param {HTMLElement | object} productOrCard - The card element (from grid) or a product object (from search).
-     */
     function openModal(productOrCard) {
         closeAllOverlays();
         
         let productData;
 
-        // Check if it's an object (from search results) or an element (from card click)
         if (productOrCard.dataset) {
-            // It's a card element, get data from data-attributes
             productData = productOrCard.dataset;
         } else {
-            // It's a product object from search
             productData = {
                 id: productOrCard.id,
                 title: productOrCard.title,
                 category: productOrCard.category,
-                price: formatPrice(productOrCard.price), // Format the price
+                price: formatPrice(productOrCard.price),
                 imageUrl: productOrCard.image_url,
                 description: productOrCard.description
             };
         }
 
-        // Populate the modal
         modalImage.src = productData.imageUrl || `https://via.placeholder.com/600x600/8A2BE2/FFFFFF?text=${productData.title.replace(' ', '+')}`;
         modalTitle.textContent = productData.title;
         modalCategory.textContent = productData.category;
@@ -359,11 +306,9 @@ document.addEventListener('DOMContentLoaded', () => {
         modalDescription.textContent = productData.description;
         modalQuantityInput.value = 1;
 
-        // Store data on the modal's "Add to Cart" button
         modalAddToCartBtn.dataset.id = productData.id;
         modalAddToCartBtn.dataset.title = productData.title;
         modalAddToCartBtn.dataset.price = productData.price;
-        // Use the small image for cart
         modalAddToCartBtn.dataset.imageUrl = productData.imageUrl; 
 
         modalOverlay.classList.add('active');
@@ -375,9 +320,6 @@ document.addEventListener('DOMContentLoaded', () => {
         cartOverlay.classList.add('active');
     }
 
-    /**
-     * Updates the notification badge on the cart icon.
-     */
     function updateCartNotification() {
         const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
         if (totalItems > 0) {
@@ -389,10 +331,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /**
-     * Adds an item to the cart array and updates the UI.
-     * @param {object} item - The item to add.
-     */
     function addToCart(item) {
         const existingItem = cart.find(cartItem => String(cartItem.id) === String(item.id));
         if (existingItem) {
@@ -404,19 +342,12 @@ document.addEventListener('DOMContentLoaded', () => {
         updateCartNotification();
     }
 
-    /**
-     * Removes an item from the cart array by its ID and updates the UI.
-     * @param {string} itemId 
-     */
     function removeFromCart(itemId) {
         cart = cart.filter(item => String(item.id) !== String(itemId));
         renderCart();
         updateCartNotification();
     }
 
-    /**
-     * Re-draws the cart sidebar based on the 'cart' array.
-     */
     function renderCart() {
         cartBody.innerHTML = '';
         if (cart.length === 0) {
@@ -449,25 +380,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Checkout Logic ---
     function openCheckout() {
-        if (cart.length === 0) return; // Don't open if cart is empty
+        if (cart.length === 0) return;
         closeAllOverlays();
         checkoutTotalPriceEl.textContent = cartSubtotalEl.textContent;
         checkoutModal.classList.add('active');
     }
 
-    /**
-     * Handles the "Confirm Purchase" button click.
-     * @param {Event} e 
-     */
     function handlePurchase(e) {
-        e.preventDefault(); // Stop form from reloading the page
+        e.preventDefault(); 
         closeAllOverlays();
-        cart = []; // Empty the cart
+        cart = [];
         renderCart();
         updateCartNotification();
         checkoutForm.reset();
         
-        // Show success popup
         successPopup.classList.add('active');
         setTimeout(() => {
             successPopup.classList.remove('active');
@@ -475,23 +401,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Auth Logic ---
-    /**
-     * Toggles the Auth modal between Login and Sign Up views.
-     * @param {Event} e 
-     */
     function toggleAuthView(e) {
         e.preventDefault();
         authMessage.textContent = '';
         authMessage.className = 'auth-message';
         
         if (loginForm.style.display === 'none') {
-            // Switch to Login view
             loginForm.style.display = 'flex';
             signupForm.style.display = 'none';
             authTitle.textContent = 'Login';
             authToggleLink.innerHTML = 'Don\'t have an account? <strong>Sign Up</strong>';
         } else {
-            // Switch to Sign Up view
             loginForm.style.display = 'none';
             signupForm.style.display = 'flex';
             authTitle.textContent = 'Sign Up';
@@ -499,20 +419,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /**
-     * Shows an error or success message in the auth modal.
-     * @param {string} message 
-     * @param {'error' | 'success'} type 
-     */
     function showAuthMessage(message, type = 'error') {
         authMessage.textContent = message;
         authMessage.className = `auth-message ${type}`;
     }
 
-    /**
-     * Handles the sign-up form submission.
-     * @param {Event} e 
-     */
     async function handleSignUp(e) {
         e.preventDefault();
         showAuthMessage('Signing up...', 'success');
@@ -522,39 +433,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const confirmPassword = e.target.confirmPassword.value;
         const username = e.target.username.value;
 
-        // Password validation
         if (password !== confirmPassword) {
             showAuthMessage('Passwords do not match.', 'error');
             return;
         }
 
-        // --- THIS IS THE FIXED LINE (underscore removed) ---
         const { data, error } = await supabase.auth.signUp({
             email: email,
             password: password,
             options: {
                 data: {
-                    username: username // Store username in metadata
+                    username: username 
                 }
             }
         });
-        // --- END OF FIX ---
 
         if (error) {
             showAuthMessage(error.message, 'error');
         } else if (data.user) {
             showAuthMessage('Sign up successful! Please log in.', 'success');
-            // Switch to login view
             setTimeout(() => {
-                 toggleAuthView(new Event('click')); // Simulate click to switch
+                 toggleAuthView(new Event('click')); 
             }, 1000);
         }
     }
 
-    /**
-     * Handles the login form submission.
-     * @param {Event} e 
-     */
     async function handleLogin(e) {
         e.preventDefault();
         showAuthMessage('Logging in...', 'success');
@@ -576,9 +479,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /**
-     * Handles the logout button click.
-     */
     async function handleLogout() {
         const { error } = await supabase.auth.signOut();
         if (error) {
@@ -588,34 +488,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /**
-     * Updates the navbar to show user info or the login button.
-     * @param {object | null} user - The Supabase user object or null.
-     */
     function updateUIForUser(user) {
-        // --- THIS IS THE FIX ---
-        // Add a "guard clause" to check if the elements exist
-        if (!authButton || !userProfile || !userLabel) {
+        // We re-find the elements here just in case, removing the guard clause
+        const authBtn = document.getElementById('auth-button');
+        const profile = document.getElementById('user-profile');
+        const label = document.getElementById('user-label');
+
+        // This check is still good, in case they are missing from HTML
+        if (!authBtn || !profile || !label) {
             console.warn('Auth UI elements not found. Skipping UI update.');
             return; 
         }
-        // --- END OF FIX ---
 
         if (user) {
-            authButton.style.display = 'none';
-            userProfile.style.display = 'flex';
-            // Use username from metadata, fall back to email
-            userLabel.textContent = user.user_metadata?.username || user.email;
+            authBtn.style.display = 'none';
+            profile.style.display = 'flex';
+            label.textContent = user.user_metadata?.username || user.email;
         } else {
-            authButton.style.display = 'block';
-            userProfile.style.display = 'none';
-            userLabel.textContent = '';
+            authBtn.style.display = 'block';
+            profile.style.display = 'none';
+            label.textContent = '';
         }
     }
 
-    /**
-     * Checks for an existing user session on page load.
-     */
     async function checkUserSession() {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
@@ -630,18 +525,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // 7. EVENT LISTENERS
     // ==========================================
 
-    /**
-     * Attaches listeners to the dynamic search result items.
-     */
     function attachSearchResultListeners() {
         const searchResultItems = document.querySelectorAll('.search-result-item');
         searchResultItems.forEach(item => {
             item.addEventListener('click', () => {
-                // Find the full product object from the 'allProducts' array
                 const productId = item.dataset.id;
                 const product = allProducts.find(p => String(p.id) === String(productId));
                 if (product) {
-                    // Pass the *object* to openModal
                     openModal(product);
                 } else {
                     console.error("Could not find product with ID:", productId);
@@ -650,12 +540,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /**
-     * Attaches listeners to all static and dynamic product cards.
-     * This is now the main function to call after products are loaded.
-     */
     function attachAllEventListeners() {
-        // We select the containers and delegate events
         const containers = [featuredContainer, allProductsContainer];
         
         containers.forEach(container => {
@@ -663,13 +548,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             container.addEventListener('click', (e) => {
                 const card = e.target.closest('.product-card');
-                if (!card) return; // Click wasn't on a card
-
+                if (!card) return; 
                 const isAddToCartButton = e.target.closest('.add-to-cart-btn');
                 
                 if (isAddToCartButton) {
-                    // "Add to Cart" button was clicked
-                    e.stopPropagation(); // Prevent modal from opening
+                    e.stopPropagation();
                     const item = {
                         id: card.dataset.id,
                         title: card.dataset.title,
@@ -679,16 +562,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     };
                     addToCart(item);
                 } else {
-                    // The card itself was clicked
                     openModal(card);
                 }
             });
         });
     }
 
-    /**
-     * Attaches all static event listeners on page load.
-     */
     function attachStaticListeners() {
         // --- Mobile Menu ---
         if (hamburgerIcon) hamburgerIcon.addEventListener('click', toggleMobileMenu);
@@ -759,13 +638,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (authCloseBtn) authCloseBtn.addEventListener('click', closeAllOverlays);
         
-        // This is the listener that was removed to prevent clickaway
-        // if (authModal) {
-        //     authModal.addEventListener('click', (e) => {
-        //         if (e.target === authModal) closeAllOverlays();
-        //     });
-        // }
-        
         if (authToggleLink) authToggleLink.addEventListener('click', toggleAuthView);
         if (loginForm) loginForm.addEventListener('submit', handleLogin);
         if (signupForm) signupForm.addEventListener('submit', handleSignUp);
@@ -776,8 +648,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Escape') closeAllOverlays();
         });
         
-        // --- THIS IS THE FIXED LINE ---
-        // This listener closes the search panel, but not other modals
         document.addEventListener('click', (e) => {
             if (searchPanel && searchPanel.classList.contains('active')) {
                 const isClickOnIcon = searchIcon.contains(e.target);
@@ -793,14 +663,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     // 8. APP INITIALIZATION
     // ==========================================
-    // First, attach all static listeners
+    
+    // --- THIS IS THE NEW STRUCTURE ---
+    
+    // 1. Find all the elements on the page first.
+    initializeDOMElements();
+    
+    // 2. Attach all listeners to those elements.
     attachStaticListeners();
-    // Then, if Supabase is connected, load products (which attaches dynamic listeners)
+
+    // 3. Connect to database and load dynamic content.
     if (supabase) {
-        loadProducts();
-        checkUserSession(); // Check for a logged-in user
+        loadProducts(); // This will call attachAllEventListeners() when done
+        checkUserSession();
     }
-    // Initial render for cart (to show 0)
+    
+    // 4. Render the cart (to show "Rp. 0")
     renderCart();
 
 }); // --- THIS IS THE END OF THE DOMContentLoaded WRAPPER ---
