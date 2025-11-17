@@ -1,3 +1,15 @@
+/* Mizumo Marketplace App
+    Contains logic for:
+    1. Supabase Integration
+    2. Product Loading
+    3. Global Cart State
+    4. Overlays & Modals
+    5. Helper Functions
+    6. Core App Logic (Mobile, Search, Modal, Cart, Checkout, Auth)
+    7. Event Listeners
+    8. App Initialization
+*/
+
 // --- THIS IS THE FIX ---
 // We wrap all code in this event listener
 document.addEventListener('DOMContentLoaded', () => {
@@ -7,8 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
 
     // --- PASTE YOUR KEYS HERE ---
-    const SUPABASE_URL = 'https://uzjxoandxfclcvpfmuun.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_FgLUWwf9LUxgvJtsI6vP4g_qIY5aqWz';
+    const SUPABASE_URL = 'YOUR_PROJECT_URL';
+    const SUPABASE_ANON_KEY = 'YOUR_ANON_PUBLIC_KEY';
 
     let supabase = null;
     try {
@@ -581,6 +593,14 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {object | null} user - The Supabase user object or null.
      */
     function updateUIForUser(user) {
+        // --- THIS IS THE FIX ---
+        // Add a "guard clause" to check if the elements exist
+        if (!authButton || !userProfile || !userLabel) {
+            console.warn('Auth UI elements not found. Skipping UI update.');
+            return; 
+        }
+        // --- END OF FIX ---
+
         if (user) {
             authButton.style.display = 'none';
             userProfile.style.display = 'flex';
@@ -783,4 +803,4 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial render for cart (to show 0)
     renderCart();
 
-});
+}); // --- THIS IS THE END OF THE DOMContentLoaded WRAPPER ---
