@@ -19,6 +19,7 @@
 </head>
 <body>
 
+    <!-- ... (Navbar and other overlays are unchanged) ... -->
     <!-- Header -->
     <nav class="navbar">
         <a href="#" class="nav-logo">Mizumo</a>
@@ -187,13 +188,14 @@
         </div>
     </div>
 
-    <!-- NEW: Auth Modal (Login & Sign Up) -->
+    <!-- Auth Modal (Login & Sign Up) -->
     <div class="modal-overlay auth-modal-overlay" id="auth-modal-overlay">
         <div class="modal-content auth-form-container">
             <button class="modal-close" id="auth-close-btn">&times;</button>
 
             <!-- Login Form (Default) -->
             <form class="auth-form" id="login-form">
+                <!-- ... (Unchanged) ... -->
                 <h2 class="modal-title" style="text-align: center; margin-bottom: 2rem;">Login</h2>
                 <p class="auth-error" id="login-error-msg"></p>
                 <div class="form-group">
@@ -210,10 +212,17 @@
                 </p>
             </form>
 
-            <!-- Sign Up Form (Hidden) -->
+            <!-- Sign Up Form (Hidden) --- UPDATED --- -->
             <form class="auth-form" id="signup-form" style="display: none;">
                 <h2 class="modal-title" style="text-align: center; margin-bottom: 2rem;">Sign Up</h2>
                 <p class="auth-error" id="signup-error-msg"></p>
+                
+                <!-- NEW: Username Field -->
+                <div class="form-group">
+                    <label for="signup-username">Username</label>
+                    <input type="text" id="signup-username" placeholder="Choose a username" required>
+                </div>
+
                 <div class="form-group">
                     <label for="signup-email">Email</label>
                     <input type="email" id="signup-email" placeholder="your.email@example.com" required>
@@ -222,6 +231,13 @@
                     <label for="signup-password">Password</label>
                     <input type="password" id="signup-password" placeholder="Create a strong password" required>
                 </div>
+
+                <!-- NEW: Confirm Password Field -->
+                <div class="form-group">
+                    <label for="signup-confirm-password">Confirm Password</label>
+                    <input type="password" id="signup-confirm-password" placeholder="Confirm your password" required>
+                </div>
+
                 <button type="submit" class="cta-button confirm-purchase-btn">Create Account</button>
                 <p class="form-toggle">
                     Already have an account? <a href="#" id="show-login-form">Login</a>

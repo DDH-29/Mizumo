@@ -104,7 +104,7 @@ async function loadProducts() {
 // 3. GLOBAL APP STATE
 // ==========================================
 let cart = [];
-let currentUser = null; //To store user data
+let currentUser = null; 
 
 // ==========================================
 // 4. OVERLAY & MODAL ELEMENTS
@@ -150,7 +150,7 @@ const checkoutForm = document.getElementById('checkout-form');
 const checkoutTotalPriceEl = document.getElementById('checkout-total-price');
 const successPopup = document.getElementById('success-popup');
 
-//Auth Elements
+// Auth Elements
 const loginBtn = document.getElementById('login-btn');
 const userProfileMenu = document.getElementById('user-profile-menu');
 const userEmailDisplay = document.getElementById('user-email-display');
@@ -182,14 +182,12 @@ function closeAllOverlays() {
     if (cartOverlay) cartOverlay.classList.remove('active');
     if (modalOverlay) modalOverlay.classList.remove('active');
     if (checkoutModal) checkoutModal.classList.remove('active');
-    if (authModal) authModal.classList.remove('active'); // NEW
+    if (authModal) authModal.classList.remove('active'); 
     if (pageContent) pageContent.classList.remove('blur-active');
     
-    // Clear search results when closing
     if (searchResultsContainer) searchResultsContainer.innerHTML = '<p class="search-prompt">Start typing to see results...</p>';
     if (searchInput) searchInput.value = '';
 
-    // Clear auth errors
     if(loginErrorMsg) loginErrorMsg.classList.remove('active');
     if(signupErrorMsg) signupErrorMsg.classList.remove('active');
 }
@@ -365,7 +363,6 @@ function renderCart() {
 function openCheckout() {
     if (cart.length === 0) return;
     
-    //Check for login
     if (!currentUser) {
         alert("Please log in to proceed to checkout."); // You can make this a custom popup
         openAuthModal();
@@ -392,13 +389,12 @@ function handlePurchase(e) {
 }
 
 // ==========================================
-// 7. NEW: AUTH LOGIC
+// 7. AUTH LOGIC (UPDATED)
 // ==========================================
 
 function openAuthModal() {
     closeAllOverlays();
     authModal.classList.add('active');
-    // Default to login form
     loginForm.style.display = 'flex';
     signupForm.style.display = 'none';
 }
@@ -407,7 +403,10 @@ function updateUIForUser(user) {
     currentUser = user;
     loginBtn.style.display = 'none';
     userProfileMenu.style.display = 'flex';
-    userEmailDisplay.textContent = user.email;
+    
+    // NEW: Display username if it exists, otherwise fall back to email
+    const displayName = user.user_metadata.username || user.email;
+    userEmailDisplay.textContent = displayName;
 }
 
 function updateUIForGuest() {
@@ -419,6 +418,7 @@ function updateUIForGuest() {
 
 async function handleLogin(e) {
     e.preventDefault();
+    loginErrorMsg.classList.remove('active'); // Clear error
     const email = loginForm.querySelector('#login-email').value;
     const password = loginForm.querySelector('#login-password').value;
 
@@ -439,12 +439,30 @@ async function handleLogin(e) {
 
 async function handleSignUp(e) {
     e.preventDefault();
+    signupErrorMsg.classList.remove('active'); // Clear error
+
+    // NEW: Get all form fields
+    const username = signupForm.querySelector('#signup-username').value;
     const email = signupForm.querySelector('#signup-email').value;
     const password = signupForm.querySelector('#signup-password').value;
+    const confirmPassword = signupForm.querySelector('#signup-confirm-password').value;
 
+    // NEW: Password validation
+    if (password !== confirmPassword) {
+        signupErrorMsg.textContent = "Passwords do not match.";
+        signupErrorMsg.classList.add('active');
+        return; // Stop the function
+    }
+
+    // NEW: Sign up with username in metadata
     const { data, error } = await supabase.auth.signUp({
         email: email,
         password: password,
+        options: {
+            data: {
+                username: username // This stores the username in user_metadata
+            }
+        }
     });
 
     if (error) {
@@ -583,7 +601,7 @@ function attachAllEventListeners() {
     });
     checkoutForm.addEventListener('submit', handlePurchase);
     
-    // Auth Listeners ---
+    // --- Auth Listeners ---
     loginBtn.addEventListener('click', openAuthModal);
     logoutBtn.addEventListener('click', handleLogout);
     authCloseBtn.addEventListener('click', closeAllOverlays);
@@ -591,7 +609,6 @@ function attachAllEventListeners() {
         if (e.target === authModal) closeAllOverlays();
     });
     
-    // Auth form toggling
     showSignupFormBtn.addEventListener('click', (e) => {
         e.preventDefault();
         loginForm.style.display = 'none';
@@ -603,7 +620,6 @@ function attachAllEventListeners() {
         signupForm.style.display = 'none';
     });
 
-    // Auth form submissions
     loginForm.addEventListener('submit', handleLogin);
     signupForm.addEventListener('submit', handleSignUp);
 
